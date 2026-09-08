@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-  :root { --urc-dark:#0a1e2d; --urc-dark-2:#142837; --urc-turquoise:#00cde6; --available:#1e7e34; --unavailable:#b3261e; }
+  :root { --urc-dark:#0a1e2d; --urc-dark-2:#142837; --urc-turquoise:#00cde6; --available:#1e7e34; --unavailable:#b3261e; --heat-orange:#b25e09; }
   body { font-family:'Red Hat Display',ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,sans-serif; max-width:880px; margin:40px auto; padding:0 20px; color:var(--urc-dark); background:#f4f6f8; }
   h1 { font-size:1.4rem; font-weight:700; }
   h2 { font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:#7a8590; margin:24px 0 10px; }
@@ -33,8 +33,19 @@
   .slot-filled { flex:1; display:flex; align-items:center; justify-content:space-between; background:#f4f6f8; border-radius:6px; padding:8px 12px; }
   .slot-filled .official-name { font-weight:500; }
   .slot-filled button { background:none; border:none; color:var(--unavailable); cursor:pointer; font-size:0.85rem; font-family:inherit; }
-  .slot select { flex:1; }
 
+  .picker-list { flex:1; display:flex; flex-direction:column; gap:4px; }
+  .picker-row { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:8px 12px; border-radius:6px; border:1px solid #e3e6e9; background:#fff; cursor:pointer; font-size:0.9rem; }
+  .picker-row:hover { border-color:var(--urc-turquoise); }
+  .picker-row.ineligible { color:#aab2ba; background:#f4f6f8; cursor:not-allowed; text-decoration:line-through; }
+  .picker-row.conflict-red { background:#fdecea; border-color:var(--unavailable); }
+  .picker-row.conflict-orange { background:#fff4e5; border-color:var(--heat-orange); }
+  .picker-row.conflict-green { background:#e6f4ea; border-color:var(--available); }
+  .conflict-note { font-size:0.75rem; color:#7a8590; white-space:nowrap; }
+
+  .legend { display:flex; gap:16px; margin:0 0 16px; font-size:0.8rem; color:#7a8590; flex-wrap:wrap; }
+  .legend span { display:inline-flex; align-items:center; gap:6px; }
+  .swatch { width:12px; height:12px; border-radius:3px; display:inline-block; box-sizing:border-box; }
   #message { margin-top:16px; padding:10px; border-radius:6px; display:none; }
   #message.success { display:block; background:#e6f4ea; color:#1e7e34; }
   #message.error { display:block; background:#fdecea; color:#b3261e; }
@@ -137,6 +148,9 @@ async function init() {
 
 // Conflict flag (doc Section 5.1): how many times, and how recently, this
 // official has been on a panel for either team in the fixture being built.
+// Heat level is based on rounds-since (1 round ago = red, 2 = orange, 3+ =
+// green), not raw appointment count - freshness of the last conflict is what
+// matters for rotation, not how often it's happened historically.
 function officialConflict(officialId) {
   const teams = [currentFixture['Home Team'], currentFixture['Away Team']];
   const matches = allAppointments
@@ -145,7 +159,17 @@ function officialConflict(officialId) {
     .filter((f) => f && f.id !== currentFixture.id && (teams.includes(f['Home Team']) || teams.includes(f['Away Team'])));
   matches.sort((a, b) => (b.Date || '').localeCompare(a.Date || ''));
   if (matches.length === 0) return null;
-  return { count: matches.length, last: matches[0] };
+
+  const last = matches[0];
+  let roundsSince = null;
+  let level = null;
+  if (typeof currentFixture.Round === 'number' && typeof last.Round === 'number') {
+    roundsSince = currentFixture.Round - last.Round;
+    if (roundsSince <= 1) level = 'red';
+    else if (roundsSince === 2) level = 'orange';
+    else level = 'green';
+  }
+  return { count: matches.length, last, roundsSince, level };
 }
 
 fixtureSelect.addEventListener('change', async () => {
@@ -191,6 +215,11 @@ function render() {
   const status = currentPanel.panelStatus || 'Draft';
 
   let html = `
+    <div class="legend">
+      <span><span class="swatch" style="background:#fdecea;border:1px solid var(--unavailable)"></span> Same team 1 round ago</span>
+      <span><span class="swatch" style="background:#fff4e5;border:1px solid var(--heat-orange)"></span> 2 rounds ago</span>
+      <span><span class="swatch" style="background:#e6f4ea;border:1px solid var(--available)"></span> 3+ rounds ago</span>
+    </div>
     <div class="status-bar">
       <span class="status-pill">${status}</span>
       <div class="progress"><div class="progress-fill" style="width:${(filledCount / 10) * 100}%"></div></div>
@@ -216,21 +245,27 @@ function render() {
             <button data-remove="${appt.id}" type="button">Remove</button>
           </div>`;
       } else {
-        html += `<select data-assign-role="${role}"><option value="">Select official…</option>`;
+        html += `<div class="picker-list">`;
         for (const o of officials) {
           const check = isEligible(o, role, currentFixture);
+          if (!check.eligible) {
+            html += `<div class="picker-row ineligible">${o.Name} — ${check.reason}</div>`;
+            continue;
+          }
           const avail = availabilityByOfficial[o.id];
-          const availLabel = avail ? ` — ${avail}` : '';
+          const availLabel = avail ? ` · ${avail}` : '';
           const conflict = officialConflict(o.id);
+          const heatClass = conflict && conflict.level ? `conflict-${conflict.level}` : '';
           const conflictLabel = conflict
-            ? ` — ${conflict.count}x prior (last R${conflict.last.Round ?? '?'}, ${conflict.last.Date || 'n/a'})`
+            ? `${conflict.count}x prior (last R${conflict.last.Round ?? '?'}, ${conflict.last.Date || 'n/a'})`
             : '';
-          const label = check.eligible
-            ? `${o.Name} (${o['Home Union'] || 'n/a'})${availLabel}${conflictLabel}`
-            : `${o.Name} — ${check.reason}`;
-          html += `<option value="${o.id}" ${check.eligible ? '' : 'disabled'}>${label}</option>`;
+          html += `
+            <div class="picker-row ${heatClass}" data-assign-role="${role}" data-official-id="${o.id}">
+              <span>${o.Name} (${o['Home Union'] || 'n/a'})${availLabel}</span>
+              <span class="conflict-note">${conflictLabel}</span>
+            </div>`;
         }
-        html += `</select>`;
+        html += `</div>`;
       }
       html += `</div>`;
     }
@@ -239,8 +274,8 @@ function render() {
 
   content.innerHTML = html;
 
-  content.querySelectorAll('[data-assign-role]').forEach((sel) => {
-    sel.addEventListener('change', () => assignRole(sel.dataset.assignRole, sel.value));
+  content.querySelectorAll('[data-assign-role]').forEach((row) => {
+    row.addEventListener('click', () => assignRole(row.dataset.assignRole, row.dataset.officialId));
   });
   content.querySelectorAll('[data-remove]').forEach((btn) => {
     btn.addEventListener('click', () => removeAppointment(btn.dataset.remove));
