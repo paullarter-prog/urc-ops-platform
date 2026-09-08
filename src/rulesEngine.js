@@ -1,11 +1,14 @@
 // Appointment eligibility rules (Doc Section 8: neutral vs home-union roles).
 
+// Multiple aliases per team since sponsor-prefixed names change season to
+// season (e.g. Emirates Lions -> 10bet Lions) and older records may use
+// the shorter form (e.g. 'Edinburgh' vs 'Edinburgh Rugby').
 const UNION_TEAMS = {
-  SCO: ['Glasgow Warriors', 'Edinburgh'],
+  SCO: ['Glasgow Warriors', 'Edinburgh Rugby', 'Edinburgh'],
   ITA: ['Benetton', 'Zebre Parma'],
-  WAL: ['Cardiff', 'Dragons', 'Ospreys', 'Scarlets'],
+  WAL: ['Cardiff Rugby', 'Cardiff', 'Dragons RFC', 'Dragons', 'Ospreys', 'Scarlets'],
   IRL: ['Connacht', 'Leinster', 'Munster', 'Ulster'],
-  RSA: ['Vodacom Bulls', 'Emirates Lions', 'Hollywoodbets Sharks', 'DHL Stormers'],
+  RSA: ['Vodacom Bulls', '10bet Lions', 'Emirates Lions', 'Hollywoodbets Sharks', 'DHL Stormers'],
 };
 
 const FIVE_UNIONS = Object.keys(UNION_TEAMS);
@@ -19,8 +22,6 @@ const GOVERNING_BODY_TO_UNION = {
   FIR: 'ITA',
 };
 
-const KNOCKOUT_ROUNDS = new Set(['QF', 'SF', 'FINAL', 'GRAND FINAL']);
-
 function teamUnion(teamName) {
   const entry = Object.entries(UNION_TEAMS).find(([, teams]) => teams.includes(teamName));
   return entry ? entry[0] : null;
@@ -31,9 +32,11 @@ function officialUnion(homeUnion) {
   return GOVERNING_BODY_TO_UNION[homeUnion.toUpperCase()] || null;
 }
 
+// Round is a Number field in Airtable (1-18), so knockout stage is tracked via
+// a separate 'Stage' text field (e.g. 'Quarter Final') set once QF/SF/GF
+// matchups are known. No Stage value means regular season.
 function isKnockout(fixture) {
-  const round = fixture.Round;
-  return typeof round === 'string' && KNOCKOUT_ROUNDS.has(round.trim().toUpperCase());
+  return typeof fixture.Stage === 'string' && fixture.Stage.trim() !== '';
 }
 
 // official: Airtable fields for an Officials record (needs Home Union)
