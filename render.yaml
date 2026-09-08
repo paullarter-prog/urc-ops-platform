@@ -10,3 +10,5 @@ services:
         sync: false
       - key: AIRTABLE_BASE_ID
         value: appqvDQq87J1czWd3
+      - key: JWT_SECRET
+        sync: false
