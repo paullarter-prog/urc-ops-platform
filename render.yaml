@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: urc-ops-backend
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node index.js
+    envVars:
+      - key: AIRTABLE_API_KEY
+        sync: false
+      - key: AIRTABLE_BASE_ID
+        value: appqvDQq87J1czWd3
