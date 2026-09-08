@@ -81,9 +81,12 @@
     <a class="disabled" title="Not built yet">Messaging</a>
     <a class="disabled" title="Not built yet">MD Docs</a>
   </nav>
-  <div class="official-picker">
+  <div class="official-picker" id="official-picker">
     <label for="official">Viewing as</label>
     <select id="official"><option value="">Select an official…</option></select>
+  </div>
+  <div class="official-picker">
+    <a href="#" id="logout-link" style="color:#cfe0e8; font-size:0.85rem; text-decoration:none;">Log out</a>
   </div>
 </div>
 
@@ -116,6 +119,7 @@ const content = document.getElementById('content');
 const whoami = document.getElementById('whoami');
 
 let officials = [];
+let currentUser = null;
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
@@ -124,16 +128,40 @@ function initials(name) {
   return (name || '?').split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase();
 }
 
+document.getElementById('logout-link').addEventListener('click', async (e) => {
+  e.preventDefault();
+  await fetch('/auth/logout', { method: 'POST' });
+  window.location.href = '/login.html';
+});
+
 async function init() {
+  const meRes = await fetch('/auth/me');
+  currentUser = await meRes.json();
+
   const res = await fetch('/officials');
   officials = await res.json();
-  for (const o of officials) {
-    officialSelect.add(new Option(`${o.Name} (${o.Role || 'n/a'})`, o.id));
-  }
-  const saved = localStorage.getItem('urc_viewing_as');
-  if (saved && officials.some((o) => o.id === saved)) {
-    officialSelect.value = saved;
-    loadDashboard(saved);
+
+  if (currentUser.role === 'Admin') {
+    // Admins can inspect any official's dashboard.
+    for (const o of officials) {
+      officialSelect.add(new Option(`${o.Name} (${o.Role || 'n/a'})`, o.id));
+    }
+    const saved = localStorage.getItem('urc_viewing_as');
+    if (saved && officials.some((o) => o.id === saved)) {
+      officialSelect.value = saved;
+      loadDashboard(saved);
+    }
+  } else {
+    // Everyone else only ever sees their own dashboard.
+    document.getElementById('official-picker').hidden = true;
+    const own = officials.find(
+      (o) => (o.Email || '').toLowerCase() === (currentUser.email || '').toLowerCase()
+    );
+    if (own) {
+      loadDashboard(own.id);
+    } else {
+      content.innerHTML = '<div class="empty-state">No match official profile is linked to your account yet.</div>';
+    }
   }
 }
 
