@@ -26,6 +26,29 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// POST /officials - create a new official
+// body: { name, role, email, phone, homeUnion }
+router.post('/', async (req, res) => {
+  try {
+    const { name, role, email, phone, homeUnion } = req.body;
+
+    if (!name || !role) {
+      return res.status(400).json({ error: 'name and role are required' });
+    }
+
+    const fields = { Name: name, Role: role, Availability: 'Available' };
+    if (email) fields.Email = email;
+    if (phone) fields.Phone = phone;
+    if (homeUnion) fields['Home Union'] = homeUnion;
+
+    const created = await base(TABLES.OFFICIALS).create([{ fields }], { typecast: true });
+    res.status(201).json({ id: created[0].id, ...created[0].fields });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to create official' });
+  }
+});
+
 // GET /officials/:id/history - this official's past appointments, most recent
 // first. Each entry carries the fixture's teams/date so a caller can work out
 // "how many times with team X" / "when did they last officiate team X"
