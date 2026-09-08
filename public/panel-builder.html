@@ -115,21 +115,37 @@ const content = document.getElementById('content');
 const message = document.getElementById('message');
 
 let fixtures = [];
+let fixturesById = {};
 let officials = [];
 let currentFixture = null;
 let currentPanel = null;
 let availabilityByOfficial = {};
+let allAppointments = [];
 
 async function init() {
   const res = await fetch('/fixtures');
   fixtures = await res.json();
   fixtures.sort((a, b) => (a.Date || '').localeCompare(b.Date || '') || (a.Round || 0) - (b.Round || 0));
+  fixturesById = Object.fromEntries(fixtures.map((f) => [f.id, f]));
   for (const f of fixtures) {
     const label = `R${f.Round ?? '?'} · ${f.Date || 'TBC'} · ${f['Home Team']} v ${f['Away Team']}`;
     fixtureSelect.add(new Option(label, f.id));
   }
   const officialsRes = await fetch('/officials');
   officials = await officialsRes.json();
+}
+
+// Conflict flag (doc Section 5.1): how many times, and how recently, this
+// official has been on a panel for either team in the fixture being built.
+function officialConflict(officialId) {
+  const teams = [currentFixture['Home Team'], currentFixture['Away Team']];
+  const matches = allAppointments
+    .filter((a) => (a.Official || []).includes(officialId))
+    .map((a) => fixturesById[(a.Fixture || [])[0]])
+    .filter((f) => f && f.id !== currentFixture.id && (teams.includes(f['Home Team']) || teams.includes(f['Away Team'])));
+  matches.sort((a, b) => (b.Date || '').localeCompare(a.Date || ''));
+  if (matches.length === 0) return null;
+  return { count: matches.length, last: matches[0] };
 }
 
 fixtureSelect.addEventListener('change', async () => {
@@ -144,12 +160,14 @@ fixtureSelect.addEventListener('change', async () => {
 });
 
 async function loadPanel(fixtureId) {
-  const [panelRes, fixtureRes] = await Promise.all([
+  const [panelRes, fixtureRes, appointmentsRes] = await Promise.all([
     fetch(`/panels/${fixtureId}`),
     fetch(`/fixtures/${fixtureId}`),
+    fetch('/appointments'),
   ]);
   currentPanel = await panelRes.json();
   currentFixture = await fixtureRes.json();
+  allAppointments = await appointmentsRes.json();
 
   availabilityByOfficial = {};
   if (currentFixture.Date) {
@@ -203,8 +221,12 @@ function render() {
           const check = isEligible(o, role, currentFixture);
           const avail = availabilityByOfficial[o.id];
           const availLabel = avail ? ` — ${avail}` : '';
+          const conflict = officialConflict(o.id);
+          const conflictLabel = conflict
+            ? ` — ${conflict.count}x prior (last R${conflict.last.Round ?? '?'}, ${conflict.last.Date || 'n/a'})`
+            : '';
           const label = check.eligible
-            ? `${o.Name} (${o['Home Union'] || 'n/a'})${availLabel}`
+            ? `${o.Name} (${o['Home Union'] || 'n/a'})${availLabel}${conflictLabel}`
             : `${o.Name} — ${check.reason}`;
           html += `<option value="${o.id}" ${check.eligible ? '' : 'disabled'}>${label}</option>`;
         }

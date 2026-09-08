@@ -26,4 +26,44 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// GET /officials/:id/history - this official's past appointments, most recent
+// first. Each entry carries the fixture's teams/date so a caller can work out
+// "how many times with team X" / "when did they last officiate team X"
+// (the doc's conflict-flag feature) without a separate per-team endpoint.
+router.get('/:id/history', async (req, res) => {
+  try {
+    const officialId = req.params.id;
+    const [appointments, fixtures] = await Promise.all([
+      base(TABLES.APPOINTMENTS).select({}).all(),
+      base(TABLES.FIXTURES).select({}).all(),
+    ]);
+
+    const fixturesById = {};
+    for (const f of fixtures) fixturesById[f.id] = f.fields;
+
+    const history = appointments
+      .filter((a) => (a.fields.Official || []).includes(officialId))
+      .map((a) => {
+        const fixtureId = (a.fields.Fixture || [])[0];
+        const fixture = fixturesById[fixtureId] || {};
+        return {
+          fixtureId,
+          fixtureName: fixture['Fixture Name'] || null,
+          round: fixture.Round ?? null,
+          homeTeam: fixture['Home Team'] || null,
+          awayTeam: fixture['Away Team'] || null,
+          date: fixture.Date || null,
+          role: a.fields.Role || null,
+          appointmentStatus: a.fields['Appointment Status'] || null,
+        };
+      })
+      .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+
+    res.json(history);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch official history' });
+  }
+});
+
 module.exports = router;
