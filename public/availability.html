@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Availability — URC Ops Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --urc-dark:#0a1e2d; --urc-dark-2:#142837; --urc-turquoise:#00cde6; --available:#1e7e34; --unavailable:#b3261e; }
+  body { font-family:'Red Hat Display',ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,sans-serif; max-width:720px; margin:40px auto; padding:0 20px; color:var(--urc-dark); background:#f4f6f8; }
+  h1 { font-size:1.4rem; font-weight:700; }
+  .controls { display:flex; gap:14px; align-items:center; margin-bottom:20px; flex-wrap:wrap; }
+  select { padding:8px; font-size:1rem; font-family:inherit; border:1px solid #ccc; border-radius:6px; background:#fff; color:var(--urc-dark); }
+  .month-nav { display:flex; align-items:center; gap:10px; margin-left:auto; }
+  .month-nav button { background:var(--urc-dark); color:#fff; border:none; border-radius:6px; padding:6px 12px; cursor:pointer; font-family:inherit; font-size:1rem; }
+  .month-nav button:hover { background:var(--urc-dark-2); }
+  .month-label { font-weight:700; min-width:150px; text-align:center; }
+  .calendar { background:#fff; border-radius:10px; border-top:4px solid var(--urc-turquoise); box-shadow:0 1px 3px rgba(0,0,0,0.08); padding:20px; }
+  .weekdays, .days { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+  .weekdays div { text-align:center; font-size:0.75rem; font-weight:700; color:#7a8590; padding-bottom:6px; }
+  .day { aspect-ratio:1; display:flex; align-items:center; justify-content:center; border-radius:6px; border:1px solid #e3e6e9; cursor:pointer; font-weight:500; user-select:none; }
+  .day.empty { visibility:hidden; cursor:default; }
+  .day.available { background:#e6f4ea; border-color:var(--available); color:var(--available); }
+  .day.unavailable { background:#fdecea; border-color:var(--unavailable); color:var(--unavailable); }
+  .legend { display:flex; gap:16px; margin-top:14px; font-size:0.85rem; flex-wrap:wrap; }
+  .legend span { display:inline-flex; align-items:center; gap:6px; }
+  .swatch { width:14px; height:14px; border-radius:3px; display:inline-block; box-sizing:border-box; }
+  button.save { margin-top:20px; padding:10px 18px; font-size:1rem; font-family:inherit; font-weight:500; background:var(--urc-dark); color:#fff; border:none; border-radius:6px; cursor:pointer; }
+  button.save:hover { background:var(--urc-dark-2); }
+  #message { margin-top:14px; padding:10px; border-radius:6px; display:none; }
+  #message.success { display:block; background:#e6f4ea; color:#1e7e34; }
+  #message.error { display:block; background:#fdecea; color:#b3261e; }
+</style>
+</head>
+<body>
+<h1>Official Availability</h1>
+
+<div class="controls">
+  <select id="official"><option value="">Select an official…</option></select>
+  <div class="month-nav">
+    <button id="prev" type="button">‹</button>
+    <span class="month-label" id="month-label"></span>
+    <button id="next" type="button">›</button>
+  </div>
+</div>
+
+<div class="calendar">
+  <div class="weekdays">
+    <div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div>
+  </div>
+  <div class="days" id="days"></div>
+</div>
+
+<div class="legend">
+  <span><span class="swatch" style="background:#e6f4ea;border:1px solid #1e7e34"></span> Available</span>
+  <span><span class="swatch" style="background:#fdecea;border:1px solid #b3261e"></span> Unavailable</span>
+  <span><span class="swatch" style="background:#fff;border:1px solid #e3e6e9"></span> Not set — click to cycle</span>
+</div>
+
+<button class="save" id="save" type="button">Save Availability</button>
+<div id="message"></div>
+
+<script>
+const officialSelect = document.getElementById('official');
+const daysEl = document.getElementById('days');
+const monthLabel = document.getElementById('month-label');
+const message = document.getElementById('message');
+
+let current = new Date();
+current.setDate(1);
+let state = {};        // 'YYYY-MM-DD' -> 'Available' | 'Unavailable'
+let dirty = new Set(); // dates touched since last load/save
+
+function pad(n) { return String(n).padStart(2, '0'); }
+function isoDate(y, m, d) { return `${y}-${pad(m + 1)}-${pad(d)}`; }
+
+function monthBounds(date) {
+  const y = date.getFullYear(), m = date.getMonth();
+  const lastDay = new Date(y, m + 1, 0).getDate();
+  return { first: isoDate(y, m, 1), last: isoDate(y, m, lastDay), y, m, lastDay };
+}
+
+async function loadOfficials() {
+  const res = await fetch('/officials');
+  const officials = await res.json();
+  for (const o of officials) {
+    officialSelect.add(new Option(`${o.Name || 'Unnamed'} (${o.Role || 'n/a'})`, o.id));
+  }
+}
+
+async function loadAvailability() {
+  state = {};
+  dirty = new Set();
+  message.className = '';
+  message.textContent = '';
+  const officialId = officialSelect.value;
+  if (officialId) {
+    const { first, last } = monthBounds(current);
+    const res = await fetch(`/availability?officialId=${officialId}&from=${first}&to=${last}`);
+    const records = await res.json();
+    for (const r of records) state[r.Date] = r.Status;
+  }
+  renderCalendar();
+}
+
+function renderCalendar() {
+  const { y, m, lastDay } = monthBounds(current);
+  monthLabel.textContent = current.toLocaleString('default', { month: 'long', year: 'numeric' });
+  daysEl.innerHTML = '';
+
+  const firstWeekday = (new Date(y, m, 1).getDay() + 6) % 7; // Monday = 0
+  for (let i = 0; i < firstWeekday; i++) {
+    const empty = document.createElement('div');
+    empty.className = 'day empty';
+    daysEl.appendChild(empty);
+  }
+
+  for (let d = 1; d <= lastDay; d++) {
+    const dateStr = isoDate(y, m, d);
+    const cell = document.createElement('div');
+    cell.className = 'day';
+    cell.textContent = d;
+    const status = state[dateStr];
+    if (status === 'Available') cell.classList.add('available');
+    if (status === 'Unavailable') cell.classList.add('unavailable');
+
+    cell.addEventListener('click', () => {
+      if (!officialSelect.value) {
+        message.className = 'error';
+        message.textContent = 'Select an official first.';
+        return;
+      }
+      const currentStatus = state[dateStr];
+      if (!currentStatus) state[dateStr] = 'Available';
+      else if (currentStatus === 'Available') state[dateStr] = 'Unavailable';
+      else delete state[dateStr];
+      dirty.add(dateStr);
+      renderCalendar();
+    });
+    daysEl.appendChild(cell);
+  }
+}
+
+document.getElementById('prev').addEventListener('click', () => {
+  current.setMonth(current.getMonth() - 1);
+  loadAvailability();
+});
+document.getElementById('next').addEventListener('click', () => {
+  current.setMonth(current.getMonth() + 1);
+  loadAvailability();
+});
+officialSelect.addEventListener('change', loadAvailability);
+
+document.getElementById('save').addEventListener('click', async () => {
+  const officialId = officialSelect.value;
+  message.className = '';
+  message.textContent = '';
+  if (!officialId) {
+    message.className = 'error';
+    message.textContent = 'Select an official first.';
+    return;
+  }
+  if (dirty.size === 0) {
+    message.className = 'error';
+    message.textContent = 'No changes to save.';
+    return;
+  }
+  const entries = Array.from(dirty).map((date) => ({ date, status: state[date] || null }));
+  try {
+    const res = await fetch('/availability/bulk', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ officialId, entries }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to save');
+    dirty = new Set();
+    message.className = 'success';
+    message.textContent = `Saved ${data.updated} day(s).`;
+  } catch (err) {
+    message.className = 'error';
+    message.textContent = err.message;
+  }
+});
+
+renderCalendar();
+loadOfficials();
+</script>
+</body>
+</html>
