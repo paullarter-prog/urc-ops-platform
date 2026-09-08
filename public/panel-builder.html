@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Panel Builder — URC Ops Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --urc-dark:#0a1e2d; --urc-dark-2:#142837; --urc-turquoise:#00cde6; --available:#1e7e34; --unavailable:#b3261e; }
+  body { font-family:'Red Hat Display',ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,sans-serif; max-width:880px; margin:40px auto; padding:0 20px; color:var(--urc-dark); background:#f4f6f8; }
+  h1 { font-size:1.4rem; font-weight:700; }
+  h2 { font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:#7a8590; margin:24px 0 10px; }
+  select { padding:8px; font-size:1rem; font-family:inherit; border:1px solid #ccc; border-radius:6px; background:#fff; color:var(--urc-dark); }
+  .fixture-picker { display:flex; gap:14px; align-items:center; margin-bottom:16px; flex-wrap:wrap; }
+  .fixture-picker select { flex:1; min-width:280px; }
+
+  .status-bar { display:flex; align-items:center; gap:16px; background:#fff; border-radius:10px; border-top:4px solid var(--urc-turquoise); box-shadow:0 1px 3px rgba(0,0,0,0.08); padding:16px 20px; margin-bottom:20px; flex-wrap:wrap; }
+  .status-pill { padding:4px 12px; border-radius:999px; font-size:0.8rem; font-weight:700; background:#eef2f5; color:var(--urc-dark); }
+  .progress { flex:1; min-width:160px; height:8px; background:#e3e6e9; border-radius:4px; overflow:hidden; }
+  .progress-fill { height:100%; background:var(--urc-turquoise); transition:width 0.2s ease; }
+  .progress-label { font-size:0.85rem; font-weight:500; white-space:nowrap; }
+  .workflow-actions { display:flex; gap:8px; flex-wrap:wrap; }
+  .workflow-actions button { padding:6px 14px; font-size:0.85rem; font-family:inherit; font-weight:500; background:var(--urc-dark); color:#fff; border:none; border-radius:6px; cursor:pointer; }
+  .workflow-actions button:hover { background:var(--urc-dark-2); }
+  .workflow-actions button.reject { background:#b3261e; }
+  .workflow-actions button.reject:hover { background:#8f1e17; }
+
+  .role-group { background:#fff; border-radius:10px; box-shadow:0 1px 3px rgba(0,0,0,0.08); padding:16px 20px; margin-bottom:16px; }
+  .slot { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid #eef2f5; }
+  .slot:last-child { border-bottom:none; }
+  .slot-role { width:150px; font-weight:500; flex-shrink:0; }
+  .slot-filled { flex:1; display:flex; align-items:center; justify-content:space-between; background:#f4f6f8; border-radius:6px; padding:8px 12px; }
+  .slot-filled .official-name { font-weight:500; }
+  .slot-filled button { background:none; border:none; color:var(--unavailable); cursor:pointer; font-size:0.85rem; font-family:inherit; }
+  .slot select { flex:1; }
+
+  #message { margin-top:16px; padding:10px; border-radius:6px; display:none; }
+  #message.success { display:block; background:#e6f4ea; color:#1e7e34; }
+  #message.error { display:block; background:#fdecea; color:#b3261e; }
+  .empty-state { color:#7a8590; font-size:0.9rem; }
+</style>
+</head>
+<body>
+<h1>Panel Builder</h1>
+
+<div class="fixture-picker">
+  <select id="fixture"><option value="">Select a fixture…</option></select>
+</div>
+
+<div id="content"></div>
+<div id="message"></div>
+
+<script>
+// Mirrors src/rulesEngine.js - keep in sync if the backend rules change.
+const UNION_TEAMS = {
+  SCO: ['Glasgow Warriors', 'Edinburgh Rugby', 'Edinburgh'],
+  ITA: ['Benetton', 'Zebre Parma'],
+  WAL: ['Cardiff Rugby', 'Cardiff', 'Dragons RFC', 'Dragons', 'Ospreys', 'Scarlets'],
+  IRL: ['Connacht', 'Leinster', 'Munster', 'Ulster'],
+  RSA: ['Vodacom Bulls', '10bet Lions', 'Emirates Lions', 'Hollywoodbets Sharks', 'DHL Stormers'],
+};
+const FIVE_UNIONS = Object.keys(UNION_TEAMS);
+const GOVERNING_BODY_TO_UNION = { IRFU: 'IRL', SARU: 'RSA', SRU: 'SCO', WRU: 'WAL', FIR: 'ITA' };
+
+function teamUnion(teamName) {
+  const entry = Object.entries(UNION_TEAMS).find(([, teams]) => teams.includes(teamName));
+  return entry ? entry[0] : null;
+}
+function officialUnion(homeUnion) {
+  if (!homeUnion) return null;
+  return GOVERNING_BODY_TO_UNION[homeUnion.toUpperCase()] || null;
+}
+function isKnockout(fixture) {
+  return typeof fixture.Stage === 'string' && fixture.Stage.trim() !== '';
+}
+function isEligible(official, role, fixture) {
+  const neutralRoles = isKnockout(fixture) ? ['Referee', 'AR1', 'AR2', 'TMO'] : ['Referee', 'TMO'];
+  const homeUnion = teamUnion(fixture['Home Team']);
+  const awayUnion = teamUnion(fixture['Away Team']);
+  const union = officialUnion(official['Home Union']);
+  if (neutralRoles.includes(role)) {
+    if (union && union === homeUnion) return { eligible: false, reason: `${homeUnion} official — not neutral` };
+    if (union && union === awayUnion) return { eligible: false, reason: `${awayUnion} official — not neutral` };
+    return { eligible: true };
+  }
+  if (homeUnion && FIVE_UNIONS.includes(homeUnion) && union !== homeUnion) {
+    return { eligible: false, reason: `Must be ${homeUnion}` };
+  }
+  return { eligible: true };
+}
+
+const ROLE_GROUPS = [
+  { label: 'On-field', roles: ['Referee', 'AR1', 'AR2', 'AR4', 'AR5'] },
+  { label: 'TMO', roles: ['TMO', 'TMO Operator'] },
+  { label: 'Operations', roles: ['Sideline Manager', 'Timekeeper', 'Citing Commissioner'] },
+];
+const WORKFLOW_ACTIONS = {
+  Draft: [{ action: 'submit', label: 'Submit for Review' }],
+  Submitted: [
+    { action: 'review', label: 'Start Review' },
+    { action: 'approve', label: 'Approve' },
+    { action: 'reject', label: 'Reject', className: 'reject' },
+  ],
+  'Under Review': [
+    { action: 'approve', label: 'Approve' },
+    { action: 'reject', label: 'Reject', className: 'reject' },
+  ],
+  Approved: [{ action: 'send', label: 'Send to Officials' }],
+  'Sent to Officials': [],
+};
+
+const fixtureSelect = document.getElementById('fixture');
+const content = document.getElementById('content');
+const message = document.getElementById('message');
+
+let fixtures = [];
+let officials = [];
+let currentFixture = null;
+let currentPanel = null;
+let availabilityByOfficial = {};
+
+async function init() {
+  const res = await fetch('/fixtures');
+  fixtures = await res.json();
+  fixtures.sort((a, b) => (a.Date || '').localeCompare(b.Date || '') || (a.Round || 0) - (b.Round || 0));
+  for (const f of fixtures) {
+    const label = `R${f.Round ?? '?'} · ${f.Date || 'TBC'} · ${f['Home Team']} v ${f['Away Team']}`;
+    fixtureSelect.add(new Option(label, f.id));
+  }
+  const officialsRes = await fetch('/officials');
+  officials = await officialsRes.json();
+}
+
+fixtureSelect.addEventListener('change', async () => {
+  message.className = '';
+  message.textContent = '';
+  const fixtureId = fixtureSelect.value;
+  if (!fixtureId) {
+    content.innerHTML = '';
+    return;
+  }
+  await loadPanel(fixtureId);
+});
+
+async function loadPanel(fixtureId) {
+  const [panelRes, fixtureRes] = await Promise.all([
+    fetch(`/panels/${fixtureId}`),
+    fetch(`/fixtures/${fixtureId}`),
+  ]);
+  currentPanel = await panelRes.json();
+  currentFixture = await fixtureRes.json();
+
+  availabilityByOfficial = {};
+  if (currentFixture.Date) {
+    const availRes = await fetch(`/availability?date=${currentFixture.Date}`);
+    const records = await availRes.json();
+    for (const r of records) {
+      const officialId = (r.Official || [])[0];
+      if (officialId) availabilityByOfficial[officialId] = r.Status;
+    }
+  }
+
+  render();
+}
+
+function appointmentForRole(role) {
+  return (currentPanel.appointments || []).find((a) => a.Role === role);
+}
+
+function render() {
+  const filledCount = ROLE_GROUPS.flatMap((g) => g.roles).filter((r) => appointmentForRole(r)).length;
+  const status = currentPanel.panelStatus || 'Draft';
+
+  let html = `
+    <div class="status-bar">
+      <span class="status-pill">${status}</span>
+      <div class="progress"><div class="progress-fill" style="width:${(filledCount / 10) * 100}%"></div></div>
+      <span class="progress-label">${filledCount} / 10 roles filled</span>
+      <div class="workflow-actions">
+        ${(WORKFLOW_ACTIONS[status] || [])
+          .map((a) => `<button class="${a.className || ''}" data-action="${a.action}">${a.label}</button>`)
+          .join('')}
+      </div>
+    </div>
+  `;
+
+  for (const group of ROLE_GROUPS) {
+    html += `<div class="role-group"><h2>${group.label}</h2>`;
+    for (const role of group.roles) {
+      const appt = appointmentForRole(role);
+      html += `<div class="slot"><div class="slot-role">${role}</div>`;
+      if (appt) {
+        const officialName = (officials.find((o) => (appt.Official || [])[0] === o.id) || {}).Name || 'Unknown';
+        html += `
+          <div class="slot-filled">
+            <span class="official-name">${officialName}</span>
+            <button data-remove="${appt.id}" type="button">Remove</button>
+          </div>`;
+      } else {
+        html += `<select data-assign-role="${role}"><option value="">Select official…</option>`;
+        for (const o of officials) {
+          const check = isEligible(o, role, currentFixture);
+          const avail = availabilityByOfficial[o.id];
+          const availLabel = avail ? ` — ${avail}` : '';
+          const label = check.eligible
+            ? `${o.Name} (${o['Home Union'] || 'n/a'})${availLabel}`
+            : `${o.Name} — ${check.reason}`;
+          html += `<option value="${o.id}" ${check.eligible ? '' : 'disabled'}>${label}</option>`;
+        }
+        html += `</select>`;
+      }
+      html += `</div>`;
+    }
+    html += `</div>`;
+  }
+
+  content.innerHTML = html;
+
+  content.querySelectorAll('[data-assign-role]').forEach((sel) => {
+    sel.addEventListener('change', () => assignRole(sel.dataset.assignRole, sel.value));
+  });
+  content.querySelectorAll('[data-remove]').forEach((btn) => {
+    btn.addEventListener('click', () => removeAppointment(btn.dataset.remove));
+  });
+  content.querySelectorAll('[data-action]').forEach((btn) => {
+    btn.addEventListener('click', () => runWorkflowAction(btn.dataset.action));
+  });
+}
+
+async function assignRole(role, officialId) {
+  if (!officialId) return;
+  try {
+    const res = await fetch('/appointments', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fixtureId: currentFixture.id, officialId, role }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to assign');
+    await loadPanel(currentFixture.id);
+  } catch (err) {
+    message.className = 'error';
+    message.textContent = err.message;
+  }
+}
+
+async function removeAppointment(appointmentId) {
+  try {
+    const res = await fetch(`/appointments/${appointmentId}`, { method: 'DELETE' });
+    if (!res.ok && res.status !== 204) throw new Error('Failed to remove appointment');
+    await loadPanel(currentFixture.id);
+  } catch (err) {
+    message.className = 'error';
+    message.textContent = err.message;
+  }
+}
+
+async function runWorkflowAction(action) {
+  message.className = '';
+  message.textContent = '';
+  try {
+    const res = await fetch(`/panels/${currentFixture.id}/${action}`, { method: 'POST' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `Failed to ${action}`);
+    await loadPanel(currentFixture.id);
+    message.className = 'success';
+    message.textContent = `Panel status: ${data.panelStatus}`;
+  } catch (err) {
+    message.className = 'error';
+    message.textContent = err.message;
+  }
+}
+
+init();
+</script>
+</body>
+</html>

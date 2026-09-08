@@ -40,21 +40,38 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: check.reason });
     }
 
-    const created = await base(TABLES.APPOINTMENTS).create([
-      {
-        fields: {
-          'Appointment Name': name,
-          'Appointment Status': status || 'Proposed',
-          Notes: notes || '',
-          Fixture: fixtureId ? [fixtureId] : [],
-          Official: officialId ? [officialId] : [],
+    const appointmentName = name || `${fixture.fields['Fixture Name']} - ${appointedRole}`;
+
+    const created = await base(TABLES.APPOINTMENTS).create(
+      [
+        {
+          fields: {
+            'Appointment Name': appointmentName,
+            'Appointment Status': status || 'Proposed',
+            Role: appointedRole,
+            Notes: notes || '',
+            Fixture: [fixtureId],
+            Official: [officialId],
+          },
         },
-      },
-    ]);
+      ],
+      { typecast: true }
+    );
     res.status(201).json({ id: created[0].id, ...created[0].fields });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to create appointment' });
+  }
+});
+
+// DELETE /appointments/:id - remove an appointment (e.g. to clear/reassign a panel slot)
+router.delete('/:id', async (req, res) => {
+  try {
+    await base(TABLES.APPOINTMENTS).destroy([req.params.id]);
+    res.status(204).end();
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to delete appointment' });
   }
 });
 
