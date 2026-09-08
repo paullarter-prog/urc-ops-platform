@@ -26,4 +26,33 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// POST /fixtures - create a fixture
+// body: { homeTeam, awayTeam, date, kickoffTime, venue, round }
+router.post('/', async (req, res) => {
+  try {
+    const { homeTeam, awayTeam, date, kickoffTime, venue, round } = req.body;
+
+    if (!homeTeam || !awayTeam || !date || !round) {
+      return res.status(400).json({ error: 'homeTeam, awayTeam, date and round are required' });
+    }
+
+    const fields = {
+      'Fixture Name': `R${round}: ${homeTeam} v ${awayTeam}`,
+      'Home Team': homeTeam,
+      'Away Team': awayTeam,
+      Date: date,
+      Round: Number(round),
+      Status: 'Scheduled',
+    };
+    if (kickoffTime) fields['Kickoff Time'] = kickoffTime;
+    if (venue) fields.Venue = venue;
+
+    const created = await base(TABLES.FIXTURES).create([{ fields }], { typecast: true });
+    res.status(201).json({ id: created[0].id, ...created[0].fields });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to create fixture' });
+  }
+});
+
 module.exports = router;
