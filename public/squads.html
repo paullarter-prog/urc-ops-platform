@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Squad Registration — URC Ops Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --urc-dark:#0a1e2d; --urc-dark-2:#142837; --urc-turquoise:#00cde6; --available:#1e7e34; --unavailable:#b3261e; --warn:#b25e09; }
+  body { font-family:'Red Hat Display',ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,sans-serif; max-width:1000px; margin:40px auto; padding:0 20px; color:var(--urc-dark); background:#f4f6f8; }
+  h1 { font-size:1.4rem; font-weight:700; margin-bottom:4px; }
+  .sub { color:#5c7280; font-size:0.9rem; margin:0 0 20px; }
+  .back-link { display:inline-block; margin-bottom:12px; color:var(--urc-dark); text-decoration:none; font-size:0.85rem; font-weight:500; }
+  .back-link:hover { color:var(--urc-turquoise); }
+  .toolbar { display:flex; align-items:center; gap:14px; margin-bottom:18px; flex-wrap:wrap; }
+  .toolbar select { padding:8px; font-size:1rem; font-family:inherit; border:1px solid #ccc; border-radius:6px; background:#fff; color:var(--urc-dark); }
+  .count-badge { font-size:0.85rem; font-weight:500; padding:5px 12px; border-radius:20px; background:#e3e6e9; color:var(--urc-dark); }
+  .count-badge.full { background:#fdecea; color:var(--unavailable); }
+  button.primary { margin-left:auto; padding:8px 16px; font-size:0.9rem; font-family:inherit; font-weight:500; background:var(--urc-dark); color:#fff; border:none; border-radius:6px; cursor:pointer; }
+  button.primary:hover { background:var(--urc-dark-2); }
+  button.primary:disabled { background:#aab7c0; cursor:default; }
+  table { width:100%; border-collapse:collapse; background:#fff; border-radius:10px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,0.08); }
+  th, td { text-align:left; padding:10px 12px; font-size:0.85rem; border-bottom:1px solid #e3e6e9; }
+  th { background:#eef1f3; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.04em; color:#5c7280; }
+  tr:last-child td { border-bottom:none; }
+  select.inline, input.inline { font-family:inherit; font-size:0.82rem; padding:4px 6px; border:1px solid #ccc; border-radius:4px; background:#fff; color:var(--urc-dark); }
+  .remove-btn { background:none; border:none; color:var(--unavailable); cursor:pointer; font-size:0.85rem; }
+  .remove-btn:hover { text-decoration:underline; }
+  .empty-state { color:#7a8590; padding:30px; text-align:center; background:#fff; border-radius:10px; }
+  #message { margin-bottom:16px; padding:10px; border-radius:6px; display:none; }
+  #message.success { display:block; background:#e6f4ea; color:#1e7e34; }
+  #message.error { display:block; background:#fdecea; color:#b3261e; }
+  dialog { border:none; border-radius:10px; padding:0; max-width:420px; width:90%; }
+  dialog::backdrop { background:rgba(10,30,45,0.5); }
+  .dialog-inner { padding:24px; }
+  .dialog-inner h2 { font-size:1.1rem; margin:0 0 16px; }
+  .dialog-inner form { display:grid; gap:12px; }
+  .row2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  label { display:block; font-weight:500; font-size:0.8rem; margin-bottom:3px; }
+  input, select { width:100%; padding:8px; font-size:0.9rem; font-family:inherit; border:1px solid #ccc; border-radius:6px; box-sizing:border-box; background:#fff; color:var(--urc-dark); }
+  .dialog-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:6px; }
+  .dialog-actions button { padding:8px 16px; font-size:0.9rem; font-family:inherit; font-weight:500; border-radius:6px; cursor:pointer; border:none; }
+  .dialog-actions .cancel { background:#e3e6e9; color:var(--urc-dark); }
+  .dialog-actions .save { background:var(--urc-dark); color:#fff; }
+</style>
+</head>
+<body>
+<a href="dashboard.html" class="back-link">← Dashboard</a>
+<h1>Squad Registration</h1>
+<p class="sub">Register up to 70 players per team.</p>
+
+<div id="message"></div>
+
+<div class="toolbar">
+  <select id="team-select"></select>
+  <span class="count-badge" id="count-badge"></span>
+  <button class="primary" id="add-player-btn">+ Add Player</button>
+</div>
+
+<div id="squad-table"></div>
+
+<dialog id="add-dialog">
+  <div class="dialog-inner">
+    <h2>Add Player</h2>
+    <form id="add-form">
+      <div class="row2">
+        <div><label for="firstName">First Name</label><input id="firstName" required></div>
+        <div><label for="lastName">Last Name</label><input id="lastName" required></div>
+      </div>
+      <div class="row2">
+        <div><label for="knownName">Known Name</label><input id="knownName"></div>
+        <div><label for="nationality">Nationality</label><input id="nationality"></div>
+      </div>
+      <div class="row2">
+        <div><label for="dob">Date of Birth</label><input type="date" id="dob"></div>
+        <div><label for="position">Position</label>
+          <select id="position">
+            <option value="">—</option>
+            <option>Loosehead Prop</option><option>Hooker</option><option>Tighthead Prop</option>
+            <option>Lock</option><option>Blindside Flanker</option><option>Openside Flanker</option>
+            <option>Number 8</option><option>Scrum-Half</option><option>Fly-Half</option>
+            <option>Wing</option><option>Inside Centre</option><option>Outside Centre</option>
+            <option>Centre</option><option>Full-Back</option><option>Utility Back</option>
+          </select>
+        </div>
+      </div>
+      <div><label for="passportNo">Passport No.</label><input id="passportNo"></div>
+      <div class="dialog-actions">
+        <button type="button" class="cancel" id="cancel-add">Cancel</button>
+        <button type="submit" class="save">Add Player</button>
+      </div>
+    </form>
+  </div>
+</dialog>
+
+<script>
+const TEAM_NAMES = [
+  'Benetton', 'Vodacom Bulls', 'Cardiff Rugby', 'Connacht', 'Dragons RFC',
+  'Edinburgh Rugby', 'Glasgow Warriors', 'Leinster', '10bet Lions', 'Munster',
+  'Ospreys', 'Scarlets', 'Hollywoodbets Sharks', 'DHL Stormers', 'Ulster', 'Zebre Parma',
+];
+const SQUAD_CAP = 70;
+
+function franchiseMatchesTeam(franchise, team) {
+  if (!franchise || !team) return false;
+  const f = franchise.trim().toLowerCase();
+  const t = team.trim().toLowerCase();
+  return f === t || f.includes(t) || t.includes(f);
+}
+
+let currentUser = null;
+let currentTeam = null;
+let canManage = false;
+
+const teamSelect = document.getElementById('team-select');
+const countBadge = document.getElementById('count-badge');
+const squadTable = document.getElementById('squad-table');
+const message = document.getElementById('message');
+const addDialog = document.getElementById('add-dialog');
+const addBtn = document.getElementById('add-player-btn');
+
+function showMessage(text, kind) {
+  message.className = kind;
+  message.textContent = text;
+  if (kind === 'success') setTimeout(() => { message.className = ''; message.textContent = ''; }, 3000);
+}
+
+async function loadUser() {
+  const res = await fetch('/auth/me');
+  currentUser = await res.json();
+}
+
+function setupTeamSelect() {
+  teamSelect.innerHTML = '';
+  if (currentUser.role === 'Club Ops') {
+    const myTeam = TEAM_NAMES.find((t) => franchiseMatchesTeam(currentUser.franchise, t));
+    if (myTeam) {
+      teamSelect.add(new Option(myTeam, myTeam));
+      teamSelect.disabled = true;
+    }
+  } else {
+    for (const t of TEAM_NAMES) teamSelect.add(new Option(t, t));
+  }
+  currentTeam = teamSelect.value || TEAM_NAMES[0];
+}
+
+async function loadSquad() {
+  currentTeam = teamSelect.value;
+  canManage = currentUser.role === 'Admin' ||
+    (currentUser.role === 'Club Ops' && franchiseMatchesTeam(currentUser.franchise, currentTeam));
+
+  const res = await fetch(`/players?team=${encodeURIComponent(currentTeam)}`);
+  const players = await res.json();
+  players.sort((a, b) => (a['Last Name'] || '').localeCompare(b['Last Name'] || ''));
+
+  countBadge.textContent = `${players.length} / ${SQUAD_CAP} registered`;
+  countBadge.className = 'count-badge' + (players.length >= SQUAD_CAP ? ' full' : '');
+  addBtn.disabled = !canManage || players.length >= SQUAD_CAP;
+
+  if (players.length === 0) {
+    squadTable.innerHTML = '<div class="empty-state">No players registered yet.</div>';
+    return;
+  }
+
+  const rows = players.map((p) => renderRow(p)).join('');
+  squadTable.innerHTML = `
+    <table>
+      <thead><tr>
+        <th>Name</th><th>Position</th><th>Nationality</th><th>DOB</th>
+        <th>Availability</th><th>Suspended</th><th>PA Signed</th>${canManage ? '<th></th>' : ''}
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+
+  squadTable.querySelectorAll('[data-field]').forEach((el) => {
+    el.addEventListener('change', () => updatePlayer(el.dataset.id, el.dataset.field, el.type === 'checkbox' ? el.checked : el.value));
+  });
+  squadTable.querySelectorAll('.remove-btn').forEach((el) => {
+    el.addEventListener('click', () => removePlayer(el.dataset.id, el.dataset.name));
+  });
+}
+
+function renderRow(p) {
+  const name = p['Known Name'] ? `${p['Full Name']} "${p['Known Name']}"` : p['Full Name'];
+  const availability = p.Availability || 'Available';
+  const disabled = canManage ? '' : 'disabled';
+  return `
+    <tr>
+      <td>${name}</td>
+      <td>${p.Position || ''}</td>
+      <td>${p.Nationality || ''}</td>
+      <td>${p['Date of Birth'] || ''}</td>
+      <td><select class="inline" data-id="${p.id}" data-field="Availability" ${disabled}>
+        ${['Available', 'Injured', 'Unavailable'].map((v) => `<option ${v === availability ? 'selected' : ''}>${v}</option>`).join('')}
+      </select></td>
+      <td><input type="checkbox" data-id="${p.id}" data-field="Active Suspension" ${p['Active Suspension'] ? 'checked' : ''} ${disabled}></td>
+      <td><input type="checkbox" data-id="${p.id}" data-field="PA Signed" ${p['PA Signed'] ? 'checked' : ''} ${disabled}></td>
+      ${canManage ? `<td><button class="remove-btn" data-id="${p.id}" data-name="${name}">Remove</button></td>` : ''}
+    </tr>`;
+}
+
+async function updatePlayer(id, field, value) {
+  try {
+    const res = await fetch(`/players/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ [field]: value }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Update failed');
+    showMessage('Saved.', 'success');
+  } catch (err) {
+    showMessage(err.message, 'error');
+    loadSquad();
+  }
+}
+
+async function removePlayer(id, name) {
+  if (!confirm(`Remove ${name} from the squad?`)) return;
+  try {
+    const res = await fetch(`/players/${id}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to remove player');
+    showMessage(`${name} removed.`, 'success');
+    loadSquad();
+  } catch (err) {
+    showMessage(err.message, 'error');
+  }
+}
+
+addBtn.addEventListener('click', () => addDialog.showModal());
+document.getElementById('cancel-add').addEventListener('click', () => addDialog.close());
+
+document.getElementById('add-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const body = {
+    team: currentTeam,
+    firstName: document.getElementById('firstName').value,
+    lastName: document.getElementById('lastName').value,
+    knownName: document.getElementById('knownName').value,
+    nationality: document.getElementById('nationality').value,
+    dob: document.getElementById('dob').value,
+    position: document.getElementById('position').value,
+    passportNo: document.getElementById('passportNo').value,
+  };
+  try {
+    const res = await fetch('/players', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to add player');
+    addDialog.close();
+    e.target.reset();
+    showMessage(`${data['Full Name']} added to the squad.`, 'success');
+    loadSquad();
+  } catch (err) {
+    showMessage(err.message, 'error');
+  }
+});
+
+teamSelect.addEventListener('change', loadSquad);
+
+(async () => {
+  await loadUser();
+  setupTeamSelect();
+  await loadSquad();
+})();
+</script>
+</body>
+</html>

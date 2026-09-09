@@ -2,19 +2,10 @@ const express = require('express');
 const multer = require('multer');
 const { base, TABLES } = require('../airtable');
 const { teamsheetDeadline } = require('../deadline');
+const { franchiseMatchesTeam } = require('../permissions');
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
-
-// A Club Ops user's Franchise field and a fixture's team name use inconsistent
-// naming (e.g. "Bulls" vs "Vodacom Bulls") - a loose two-way substring match
-// tolerates that instead of requiring them to be kept in sync.
-function franchiseMatchesTeam(franchise, team) {
-  if (!franchise || !team) return false;
-  const f = franchise.trim().toLowerCase();
-  const t = team.trim().toLowerCase();
-  return f === t || f.includes(t) || t.includes(f);
-}
 
 async function findTeamsheet(fixtureId, team) {
   const records = await base(TABLES.TEAMSHEETS)
