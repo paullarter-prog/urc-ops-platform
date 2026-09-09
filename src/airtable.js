@@ -14,6 +14,7 @@ const TABLES = {
   USERS: 'tblrWFaKtNpLpw5RN',
   APPOINTMENTS: 'tbl30LtLx8II4Y4EB',
   AVAILABILITY: 'MO Availability',
+  TEAMSHEETS: 'tbl3T1GZAraVOCowH',
 };
 
 module.exports = { base, TABLES };

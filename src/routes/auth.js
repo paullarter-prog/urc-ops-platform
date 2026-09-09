@@ -33,6 +33,7 @@ router.post('/login', async (req, res) => {
       email: match.fields.Email,
       name: match.fields.Name,
       role: match.fields.Role || 'Official',
+      franchise: match.fields.Franchise || null,
     };
     const token = signToken(user);
 

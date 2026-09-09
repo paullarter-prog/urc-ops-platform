@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Fixtures & Teamsheets — URC Ops Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --urc-dark:#0a1e2d; --urc-dark-2:#142837; --urc-turquoise:#00cde6; --available:#1e7e34; --unavailable:#b3261e; --warn:#b25e09; }
+  body { font-family:'Red Hat Display',ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,sans-serif; max-width:1100px; margin:40px auto; padding:0 20px; color:var(--urc-dark); background:#f4f6f8; }
+  h1 { font-size:1.4rem; font-weight:700; margin-bottom:4px; }
+  .sub { color:#5c7280; font-size:0.9rem; margin:0 0 20px; }
+  .back-link { display:inline-block; margin-bottom:12px; color:var(--urc-dark); text-decoration:none; font-size:0.85rem; font-weight:500; }
+  .back-link:hover { color:var(--urc-turquoise); }
+  .toolbar { display:flex; align-items:center; gap:14px; margin-bottom:18px; flex-wrap:wrap; }
+  .toolbar select { padding:8px; font-size:1rem; font-family:inherit; border:1px solid #ccc; border-radius:6px; background:#fff; color:var(--urc-dark); }
+  .toolbar a.add-fixture { margin-left:auto; color:var(--urc-dark); font-size:0.85rem; font-weight:500; text-decoration:none; }
+  .toolbar a.add-fixture:hover { color:var(--urc-turquoise); }
+  .round-heading { font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#7a8590; margin:22px 0 8px; }
+  .fixture-row { display:grid; grid-template-columns:1fr 220px 1fr 200px; align-items:center; gap:16px; background:#fff; border-radius:10px; border:1px solid #e3e6e9; padding:16px 20px; margin-bottom:10px; }
+  .side { display:flex; align-items:center; gap:12px; }
+  .side.away { justify-content:flex-end; text-align:right; flex-direction:row-reverse; }
+  .side img.crest { width:40px; height:40px; object-fit:contain; background:#fff; border:1px solid #e3e6e9; border-radius:6px; padding:4px; box-sizing:border-box; }
+  .side .team-name { font-weight:700; font-size:1rem; }
+  .side .country { font-size:0.78rem; color:#7a8590; }
+  .center { text-align:center; }
+  .center .vs { color:var(--urc-turquoise); font-weight:700; font-size:0.85rem; }
+  .center .date { font-size:0.85rem; margin-top:4px; }
+  .center .ko { font-weight:700; font-size:0.95rem; }
+  .center .window { font-size:0.78rem; margin-top:4px; }
+  .window.open { color:var(--available); }
+  .window.closed { color:var(--unavailable); }
+  .window::before { content:'•'; margin-right:4px; }
+  .badges { display:flex; flex-direction:column; gap:8px; align-items:flex-end; }
+  .badge-row { display:flex; align-items:center; gap:8px; }
+  .pill { display:inline-block; padding:4px 12px; border-radius:20px; font-size:0.78rem; font-weight:500; border:1px solid #ccc; color:#5c7280; }
+  .pill.submitted { background:#e6f4ea; color:var(--available); border-color:var(--available); }
+  .pill.missed { background:#fdecea; color:var(--unavailable); border-color:var(--unavailable); }
+  .link-btn { background:none; border:none; padding:0; font-size:0.78rem; font-family:inherit; color:var(--urc-dark); text-decoration:underline; cursor:pointer; }
+  .link-btn:hover { color:var(--urc-turquoise); }
+  .submit-btn { background:var(--urc-dark); color:#fff; border:none; border-radius:16px; padding:4px 12px; font-size:0.78rem; font-family:inherit; font-weight:500; cursor:pointer; }
+  .submit-btn:hover { background:var(--urc-dark-2); }
+  .submit-btn:disabled { background:#aab7c0; cursor:default; }
+  #message { margin-bottom:16px; padding:10px; border-radius:6px; display:none; }
+  #message.success { display:block; background:#e6f4ea; color:#1e7e34; }
+  #message.error { display:block; background:#fdecea; color:#b3261e; }
+  .empty-state { color:#7a8590; padding:30px 0; text-align:center; }
+</style>
+</head>
+<body>
+<a href="dashboard.html" class="back-link">← Dashboard</a>
+<h1>Fixtures & Teamsheets</h1>
+<p class="sub">Submit your 23-man teamsheet by 11:15am (UK time) the day before each match.</p>
+
+<div class="toolbar">
+  <select id="round-select"></select>
+  <a href="fixtures.html" class="add-fixture" id="add-fixture-link">+ Add Fixture</a>
+</div>
+
+<div id="message"></div>
+<div id="fixtures-list"></div>
+
+<input type="file" id="file-input" accept="application/pdf,image/*" hidden>
+
+<script>
+// Same team/logo map used on the Add Fixture page - see public/fixtures.html.
+const TEAM_META = {
+  'Benetton': { logo: 'logos/benetton.svg', country: 'Italy' },
+  'Zebre Parma': { logo: 'logos/zebre-parma.png', country: 'Italy' },
+  'Cardiff Rugby': { logo: 'logos/cardiff-rugby.jpg', country: 'Wales' },
+  'Dragons RFC': { logo: 'logos/dragons-rfc.png', country: 'Wales' },
+  'Ospreys': { logo: 'logos/ospreys.svg', country: 'Wales' },
+  'Scarlets': { logo: 'logos/scarlets.svg', country: 'Wales' },
+  'Connacht': { logo: 'logos/connacht.svg', country: 'Ireland' },
+  'Leinster': { logo: 'logos/leinster.svg', country: 'Ireland' },
+  'Munster': { logo: 'logos/munster.svg', country: 'Ireland' },
+  'Ulster': { logo: 'logos/ulster.svg', country: 'Ireland' },
+  'Vodacom Bulls': { logo: 'logos/vodacom-bulls.jpg', country: 'South Africa' },
+  '10bet Lions': { logo: 'logos/10bet-lions.png', country: 'South Africa' },
+  'Hollywoodbets Sharks': { logo: 'logos/hollywoodbets-sharks.jpg', country: 'South Africa' },
+  'DHL Stormers': { logo: 'logos/dhl-stormers.jpg', country: 'South Africa' },
+  'Glasgow Warriors': { logo: 'logos/glasgow-warriors.svg', country: 'Scotland' },
+  'Edinburgh Rugby': { logo: 'logos/edinburgh-rugby.svg', country: 'Scotland' },
+};
+
+function franchiseMatchesTeam(franchise, team) {
+  if (!franchise || !team) return false;
+  const f = franchise.trim().toLowerCase();
+  const t = team.trim().toLowerCase();
+  return f === t || f.includes(t) || t.includes(f);
+}
+
+// Mirrors src/deadline.js: 11:15am Europe/London, the day before kickoff.
+function londonOffsetMinutes(utcDate) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Europe/London', hour12: false,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+  }).formatToParts(utcDate).reduce((acc, p) => { acc[p.type] = p.value; return acc; }, {});
+  const asUTC = Date.UTC(+parts.year, +parts.month - 1, +parts.day, +parts.hour, +parts.minute, +parts.second);
+  return Math.round((asUTC - utcDate.getTime()) / 60000);
+}
+function londonWallTimeToUTC(y, m, d, hh, mm) {
+  const guess = new Date(Date.UTC(y, m - 1, d, hh, mm, 0));
+  return new Date(guess.getTime() - londonOffsetMinutes(guess) * 60000);
+}
+function teamsheetDeadline(fixtureDateISO) {
+  const [y, m, d] = fixtureDateISO.split('-').map(Number);
+  const dayBefore = new Date(Date.UTC(y, m - 1, d));
+  dayBefore.setUTCDate(dayBefore.getUTCDate() - 1);
+  return londonWallTimeToUTC(dayBefore.getUTCFullYear(), dayBefore.getUTCMonth() + 1, dayBefore.getUTCDate(), 11, 15);
+}
+
+let currentUser = null;
+let allFixtures = [];
+const roundSelect = document.getElementById('round-select');
+const list = document.getElementById('fixtures-list');
+const message = document.getElementById('message');
+const fileInput = document.getElementById('file-input');
+let pendingSubmit = null; // { fixtureId, team }
+
+function showMessage(text, kind) {
+  message.className = kind;
+  message.textContent = text;
+}
+
+function formatDate(iso) {
+  return new Date(iso + 'T00:00:00Z').toLocaleDateString('en-GB', {
+    weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC',
+  });
+}
+
+async function loadUser() {
+  const res = await fetch('/auth/me');
+  currentUser = await res.json();
+  document.getElementById('add-fixture-link').hidden = currentUser.role !== 'Admin';
+}
+
+async function loadFixtures() {
+  const res = await fetch('/fixtures');
+  allFixtures = await res.json();
+
+  const rounds = [...new Set(allFixtures.map((f) => f.Round))].sort((a, b) => a - b);
+  const todayISO = new Date().toISOString().slice(0, 10);
+  const defaultRound = rounds.find((r) =>
+    allFixtures.some((f) => f.Round === r && f.Date >= todayISO)
+  ) || rounds[rounds.length - 1];
+
+  roundSelect.innerHTML = '';
+  for (const r of rounds) {
+    roundSelect.add(new Option(`Round ${r}`, r, false, r === defaultRound));
+  }
+  await renderRound(defaultRound);
+}
+
+async function renderRound(round) {
+  const fixtures = allFixtures
+    .filter((f) => f.Round === Number(round))
+    .sort((a, b) => (a.Date + (a['Kickoff Time'] || '')).localeCompare(b.Date + (b['Kickoff Time'] || '')));
+
+  if (fixtures.length === 0) {
+    list.innerHTML = '<div class="empty-state">No fixtures in this round.</div>';
+    return;
+  }
+
+  const ids = fixtures.map((f) => f.id).join(',');
+  const teamsheetsRes = await fetch(`/teamsheets?fixtureIds=${ids}`);
+  const teamsheets = await teamsheetsRes.json();
+
+  list.innerHTML = `<div class="round-heading">Round ${round}</div>`;
+  for (const fixture of fixtures) {
+    list.appendChild(renderFixtureRow(fixture, teamsheets));
+  }
+}
+
+function renderFixtureRow(fixture, teamsheets) {
+  const homeTeam = fixture['Home Team'];
+  const awayTeam = fixture['Away Team'];
+  const homeMeta = TEAM_META[homeTeam] || {};
+  const awayMeta = TEAM_META[awayTeam] || {};
+  const deadline = teamsheetDeadline(fixture.Date);
+  const isOpen = Date.now() <= deadline.getTime();
+
+  const row = document.createElement('div');
+  row.className = 'fixture-row';
+  row.innerHTML = `
+    <div class="side home">
+      <img class="crest" src="${homeMeta.logo || ''}" alt="">
+      <div><div class="team-name">${homeTeam}</div><div class="country">${homeMeta.country || ''}</div></div>
+    </div>
+    <div class="center">
+      <div class="vs">VS</div>
+      <div class="date">${formatDate(fixture.Date)}</div>
+      <div class="ko">${fixture['Kickoff Time'] || ''}${fixture['Kickoff Time'] ? ' KO' : ''}</div>
+      <div class="window ${isOpen ? 'open' : 'closed'}">${isOpen ? 'Open' : 'Closed'}</div>
+    </div>
+    <div class="side away">
+      <img class="crest" src="${awayMeta.logo || ''}" alt="">
+      <div><div class="team-name">${awayTeam}</div><div class="country">${awayMeta.country || ''}</div></div>
+    </div>
+    <div class="badges"></div>
+  `;
+
+  const badges = row.querySelector('.badges');
+  badges.appendChild(renderBadge(fixture, homeTeam, teamsheets, isOpen));
+  badges.appendChild(renderBadge(fixture, awayTeam, teamsheets, isOpen));
+  return row;
+}
+
+function renderBadge(fixture, team, teamsheets, isOpen) {
+  const wrap = document.createElement('div');
+  wrap.className = 'badge-row';
+
+  const sheet = teamsheets.find((t) => t.fixtureId === fixture.id && t.team === team && t.status === 'Submitted');
+
+  if (sheet) {
+    wrap.innerHTML = `<span class="pill submitted">✓ Submitted</span>`;
+    const viewBtn = document.createElement('button');
+    viewBtn.className = 'link-btn';
+    viewBtn.textContent = 'View Sheet';
+    viewBtn.addEventListener('click', () => window.open(sheet.file.url, '_blank'));
+    wrap.appendChild(viewBtn);
+    return wrap;
+  }
+
+  const canSubmit =
+    isOpen &&
+    currentUser &&
+    (currentUser.role === 'Admin' || (currentUser.role === 'Club Ops' && franchiseMatchesTeam(currentUser.franchise, team)));
+
+  const pill = document.createElement('span');
+  pill.className = 'pill' + (!isOpen ? ' missed' : '');
+  pill.textContent = !isOpen ? 'Missed' : 'Pending';
+  wrap.appendChild(pill);
+
+  if (canSubmit) {
+    const btn = document.createElement('button');
+    btn.className = 'submit-btn';
+    btn.textContent = 'Submit';
+    btn.addEventListener('click', () => {
+      pendingSubmit = { fixtureId: fixture.id, team, round: fixture.Round };
+      fileInput.click();
+    });
+    wrap.appendChild(btn);
+  }
+
+  return wrap;
+}
+
+fileInput.addEventListener('change', async () => {
+  if (!pendingSubmit || !fileInput.files[0]) return;
+  const { fixtureId, team, round } = pendingSubmit;
+  const file = fileInput.files[0];
+  fileInput.value = '';
+  pendingSubmit = null;
+
+  const formData = new FormData();
+  formData.append('fixtureId', fixtureId);
+  formData.append('team', team);
+  formData.append('file', file);
+
+  showMessage(`Uploading teamsheet for ${team}…`, 'success');
+  try {
+    const res = await fetch('/teamsheets', { method: 'POST', body: formData, credentials: 'same-origin' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Upload failed');
+    showMessage(`Teamsheet submitted for ${team}.`, 'success');
+    await renderRound(round);
+  } catch (err) {
+    showMessage(err.message, 'error');
+  }
+});
+
+roundSelect.addEventListener('change', () => renderRound(roundSelect.value));
+
+(async () => {
+  await loadUser();
+  await loadFixtures();
+})();
+</script>
+</body>
+</html>
