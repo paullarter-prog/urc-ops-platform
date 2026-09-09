@@ -54,6 +54,29 @@ app.use((req, res, next) => {
   next();
 });
 
+// Which roles may open which pages directly (nav already hides links a role
+// can't use, but this stops someone reaching them by typing the URL).
+// Pages not listed here (dashboard.html, etc.) are open to any signed-in role.
+const PAGE_ROLES = {
+  '/fixtures.html': ['Admin'],
+  '/officials.html': ['Admin'],
+  '/panel-builder.html': ['Admin', 'Official'],
+  '/availability.html': ['Admin', 'Official'],
+  '/teamsheets.html': ['Admin', 'Team Manager', 'Viewer'],
+  '/squads.html': ['Admin', 'Team Manager', 'Viewer'],
+  '/permits.html': ['Admin', 'Team Manager'],
+  '/loans.html': ['Admin', 'Team Manager'],
+  '/matchday.html': ['Admin', 'Team Manager', 'Viewer'],
+};
+
+app.use((req, res, next) => {
+  const allowed = PAGE_ROLES[req.path];
+  if (allowed && !allowed.includes(req.user.role)) {
+    return res.redirect('/dashboard.html');
+  }
+  next();
+});
+
 app.get('/', (req, res) => res.redirect('/dashboard.html'));
 app.use(express.static(path.join(__dirname, 'public')));
 

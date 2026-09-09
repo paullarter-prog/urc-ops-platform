@@ -10,7 +10,7 @@ function serialize(record) {
 
 function canManageTeam(user, team) {
   if (user.role === 'Admin') return true;
-  if (user.role === 'Club Ops') return franchiseMatchesTeam(user.franchise, team);
+  if (user.role === 'Team Manager') return franchiseMatchesTeam(user.franchise, team);
   return false;
 }
 

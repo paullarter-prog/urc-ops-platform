@@ -227,7 +227,7 @@ function renderBadge(fixture, team, teamsheets, isOpen) {
   const canSubmit =
     isOpen &&
     currentUser &&
-    (currentUser.role === 'Admin' || (currentUser.role === 'Club Ops' && franchiseMatchesTeam(currentUser.franchise, team)));
+    (currentUser.role === 'Admin' || (currentUser.role === 'Team Manager' && franchiseMatchesTeam(currentUser.franchise, team)));
 
   const pill = document.createElement('span');
   pill.className = 'pill' + (!isOpen ? ' missed' : '');

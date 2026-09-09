@@ -86,7 +86,7 @@ async function loadFixtures() {
   allFixtures = await res.json();
   allFixtures.sort((a, b) => a.Date.localeCompare(b.Date));
 
-  const myTeam = currentUser.role === 'Club Ops'
+  const myTeam = currentUser.role === 'Team Manager'
     ? ['Benetton', 'Vodacom Bulls', 'Cardiff Rugby', 'Connacht', 'Dragons RFC', 'Edinburgh Rugby',
        'Glasgow Warriors', 'Leinster', '10bet Lions', 'Munster', 'Ospreys', 'Scarlets',
        'Hollywoodbets Sharks', 'DHL Stormers', 'Ulster', 'Zebre Parma'].find((t) => franchiseMatchesTeam(currentUser.franchise, t))
@@ -109,7 +109,7 @@ function onFixtureChange() {
   teamSelect.innerHTML = '';
   if (!fixture) return;
 
-  if (currentUser.role === 'Club Ops') {
+  if (currentUser.role === 'Team Manager') {
     const myTeam = [fixture['Home Team'], fixture['Away Team']].find((t) => franchiseMatchesTeam(currentUser.franchise, t));
     teamSelect.add(new Option(myTeam, myTeam));
     teamSelect.disabled = true;

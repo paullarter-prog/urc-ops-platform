@@ -134,7 +134,7 @@ async function loadUser() {
 
 function setupTeamSelect() {
   teamSelect.innerHTML = '';
-  if (currentUser.role === 'Club Ops') {
+  if (currentUser.role === 'Team Manager') {
     const myTeam = TEAM_NAMES.find((t) => franchiseMatchesTeam(currentUser.franchise, t));
     if (myTeam) { teamSelect.add(new Option(myTeam, myTeam)); teamSelect.disabled = true; }
   } else {

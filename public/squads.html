@@ -133,7 +133,7 @@ async function loadUser() {
 
 function setupTeamSelect() {
   teamSelect.innerHTML = '';
-  if (currentUser.role === 'Club Ops') {
+  if (currentUser.role === 'Team Manager') {
     const myTeam = TEAM_NAMES.find((t) => franchiseMatchesTeam(currentUser.franchise, t));
     if (myTeam) {
       teamSelect.add(new Option(myTeam, myTeam));
@@ -148,7 +148,7 @@ function setupTeamSelect() {
 async function loadSquad() {
   currentTeam = teamSelect.value;
   canManage = currentUser.role === 'Admin' ||
-    (currentUser.role === 'Club Ops' && franchiseMatchesTeam(currentUser.franchise, currentTeam));
+    (currentUser.role === 'Team Manager' && franchiseMatchesTeam(currentUser.franchise, currentTeam));
 
   const res = await fetch(`/players?team=${encodeURIComponent(currentTeam)}`);
   const players = await res.json();

@@ -11,17 +11,17 @@ function serialize(record) {
 
 function canManageTeam(user, team) {
   if (user.role === 'Admin') return true;
-  if (user.role === 'Club Ops') return franchiseMatchesTeam(user.franchise, team);
+  if (user.role === 'Team Manager') return franchiseMatchesTeam(user.franchise, team);
   return false;
 }
 
-// GET /players?team=Leinster - list a team's squad. Club Ops is always scoped
+// GET /players?team=Leinster - list a team's squad. Team Manager is always scoped
 // to their own team regardless of the query param; Admin/Official/Viewer can
 // request any team, or all players if none is given.
 router.get('/', async (req, res) => {
   try {
     let team = req.query.team;
-    if (req.user.role === 'Club Ops') {
+    if (req.user.role === 'Team Manager') {
       team = resolveTeamName(req.user.franchise);
       if (!team) return res.json([]);
     }

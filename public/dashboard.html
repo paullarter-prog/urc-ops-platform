@@ -73,14 +73,14 @@
   <nav>
     <div class="nav-section">Main</div>
     <a href="dashboard.html" class="active">Dashboard</a>
-    <a href="teamsheets.html">Fixtures</a>
-    <a href="squads.html">Squads</a>
-    <a href="permits.html">Permit Requests</a>
-    <a href="loans.html">Loan Players</a>
-    <a href="matchday.html">Matchday 23</a>
-    <a href="availability.html">Availability</a>
-    <a href="panel-builder.html">Panel Builder</a>
-    <a href="officials.html">Add Official</a>
+    <a href="teamsheets.html" data-roles="Admin,Team Manager,Viewer">Fixtures</a>
+    <a href="squads.html" data-roles="Admin,Team Manager,Viewer">Squads</a>
+    <a href="permits.html" data-roles="Admin,Team Manager">Permit Requests</a>
+    <a href="loans.html" data-roles="Admin,Team Manager">Loan Players</a>
+    <a href="matchday.html" data-roles="Admin,Team Manager,Viewer">Matchday 23</a>
+    <a href="availability.html" data-roles="Admin,Official">Availability</a>
+    <a href="panel-builder.html" data-roles="Admin,Official">Panel Builder</a>
+    <a href="officials.html" data-roles="Admin">Add Official</a>
     <div class="nav-section">Communication</div>
     <a class="disabled" title="Not built yet">Messaging</a>
     <a class="disabled" title="Not built yet">MD Docs</a>
@@ -141,6 +141,11 @@ document.getElementById('logout-link').addEventListener('click', async (e) => {
 async function init() {
   const meRes = await fetch('/auth/me');
   currentUser = await meRes.json();
+
+  document.querySelectorAll('nav a[data-roles]').forEach((link) => {
+    const allowed = link.dataset.roles.split(',');
+    link.hidden = !allowed.includes(currentUser.role);
+  });
 
   const res = await fetch('/officials');
   officials = await res.json();

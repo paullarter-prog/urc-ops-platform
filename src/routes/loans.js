@@ -10,15 +10,15 @@ function serialize(record) {
 
 function canManageTeam(user, team) {
   if (user.role === 'Admin') return true;
-  if (user.role === 'Club Ops') return franchiseMatchesTeam(user.franchise, team);
+  if (user.role === 'Team Manager') return franchiseMatchesTeam(user.franchise, team);
   return false;
 }
 
-// GET /loans?team=Leinster - Club Ops always scoped to their own team
+// GET /loans?team=Leinster - Team Manager always scoped to their own team
 router.get('/', async (req, res) => {
   try {
     let team = req.query.team;
-    if (req.user.role === 'Club Ops') {
+    if (req.user.role === 'Team Manager') {
       team = resolveTeamName(req.user.franchise);
       if (!team) return res.json([]);
     }

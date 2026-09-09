@@ -83,7 +83,7 @@ router.post('/', upload.single('file'), async (req, res) => {
     }
 
     const { role, franchise } = req.user;
-    if (role === 'Club Ops') {
+    if (role === 'Team Manager') {
       if (!franchiseMatchesTeam(franchise, team)) {
         return res.status(403).json({ error: 'You can only submit a teamsheet for your own team' });
       }
