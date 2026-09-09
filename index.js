@@ -31,7 +31,9 @@ app.get('/health', (req, res) => res.json({ status: 'ok' }));
 const PUBLIC_PATHS = new Set(['/login.html', '/health', '/auth/login', '/auth/logout']);
 
 app.use((req, res, next) => {
-  if (PUBLIC_PATHS.has(req.path)) return next();
+  // Crests/branding images are just public badge art, not sensitive data,
+  // and the login page needs the URC logo before anyone is signed in.
+  if (PUBLIC_PATHS.has(req.path) || req.path.startsWith('/logos/')) return next();
 
   let user = null;
   const token = req.cookies[COOKIE_NAME];

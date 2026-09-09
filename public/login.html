@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <title>Sign In — URC Ops Platform</title>
+<link rel="icon" type="image/png" href="logos/urc-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;500;700&display=swap" rel="stylesheet">
@@ -10,7 +11,8 @@
   :root { --urc-dark:#0a1e2d; --urc-dark-2:#142837; --urc-turquoise:#00cde6; }
   body { font-family:'Red Hat Display',ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,sans-serif; margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; background:var(--urc-dark); }
   .card { width:100%; max-width:360px; background:#fff; border-radius:12px; border-top:4px solid var(--urc-turquoise); box-shadow:0 8px 30px rgba(0,0,0,0.25); padding:32px; box-sizing:border-box; }
-  h1 { font-size:1.3rem; font-weight:700; color:var(--urc-dark); margin:0 0 4px; }
+  .urc-logo { display:block; height:34px; margin:0 0 20px; }
+  h1 { font-size:1.05rem; font-weight:500; color:#7a8590; margin:0 0 4px; }
   p.sub { font-size:0.85rem; color:#7a8590; margin:0 0 24px; }
   form { display:grid; gap:14px; }
   label { display:block; font-weight:500; font-size:0.85rem; margin-bottom:4px; color:var(--urc-dark); }
@@ -24,7 +26,8 @@
 </head>
 <body>
 <div class="card">
-  <h1>URC Ops Platform</h1>
+  <img src="logos/urc-logo.png" alt="United Rugby Championship" class="urc-logo">
+  <h1>Ops Platform</h1>
   <p class="sub">Sign in to continue</p>
   <form id="login-form">
     <div>
