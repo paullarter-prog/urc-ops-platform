@@ -1,0 +1,325 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);font-size:15px;color:var(--color-text-primary)}
+.app{display:flex;height:620px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;background:var(--color-background-primary)}
+.sidebar{width:200px;background:var(--color-background-secondary);border-right:0.5px solid var(--color-border-tertiary);display:flex;flex-direction:column;flex-shrink:0}
+.sidebar-header{padding:16px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.sidebar-logo{font-size:13px;font-weight:500;color:var(--color-text-primary)}
+.sidebar-sub{font-size:11px;color:var(--color-text-tertiary);margin-top:2px}
+.role-badge{display:inline-block;font-size:10px;padding:2px 8px;border-radius:var(--border-radius-md);margin-top:6px;background:var(--color-background-info);color:var(--color-text-info)}
+.nav{padding:8px 0;flex:1}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 16px;font-size:13px;color:var(--color-text-secondary);cursor:pointer;border-left:2px solid transparent;transition:all 0.1s}
+.nav-item:hover{background:var(--color-background-tertiary);color:var(--color-text-primary)}
+.nav-item.active{color:var(--color-text-primary);font-weight:500;border-left:2px solid #378ADD;background:var(--color-background-primary)}
+.nav-item i{font-size:16px}
+.role-switcher{padding:12px;border-top:0.5px solid var(--color-border-tertiary)}
+.role-switcher label{font-size:11px;color:var(--color-text-tertiary);display:block;margin-bottom:4px}
+.role-switcher select{width:100%;font-size:12px;padding:4px 6px}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{padding:14px 20px;border-bottom:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;justify-content:space-between}
+.topbar h2{font-size:16px;font-weight:500}
+.topbar-actions{display:flex;gap:8px}
+.btn{font-size:12px;padding:6px 12px;border-radius:var(--border-radius-md);cursor:pointer;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary)}
+.btn:hover{background:var(--color-background-secondary)}
+.btn-primary{background:#185FA5;color:#E6F1FB;border-color:#185FA5}
+.btn-primary:hover{background:#0C447C}
+.content{flex:1;overflow-y:auto;padding:20px}
+.screen{display:none}
+.screen.active{display:block}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.stat{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:12px}
+.stat-label{font-size:11px;color:var(--color-text-tertiary);margin-bottom:4px}
+.stat-val{font-size:22px;font-weight:500}
+.stat-val.blue{color:#185FA5}.stat-val.green{color:#3B6D11}.stat-val.amber{color:#BA7517}.stat-val.red{color:#A32D2D}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:16px;margin-bottom:12px}
+.card-title{font-size:13px;font-weight:500;margin-bottom:12px;color:var(--color-text-secondary)}
+.fixture-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:0.5px solid var(--color-border-tertiary);font-size:13px}
+.fixture-row:last-child{border-bottom:none}
+.fix-date{width:80px;color:var(--color-text-tertiary);font-size:11px}
+.fix-teams{flex:1;font-weight:500}
+.fix-venue{flex:1;color:var(--color-text-secondary);font-size:12px}
+.badge{font-size:10px;padding:3px 8px;border-radius:var(--border-radius-md)}
+.badge-appointed{background:#EAF3DE;color:#27500A}
+.badge-pending{background:#FAEEDA;color:#633806}
+.badge-vacant{background:#FCEBEB;color:#791F1F}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal-head{font-size:10px;color:var(--color-text-tertiary);text-align:center;padding:4px 0;font-weight:500}
+.cal-day{border-radius:var(--border-radius-md);padding:6px 4px;text-align:center;cursor:pointer;font-size:12px;border:0.5px solid var(--color-border-tertiary);min-height:42px}
+.cal-day.avail{background:#EAF3DE;border-color:#639922;color:#27500A}
+.cal-day.unavail{background:#FCEBEB;border-color:#E24B4A;color:#791F1F}
+.cal-day.fixture{background:#E6F1FB;border-color:#378ADD;color:#0C447C;font-weight:500}
+.cal-day.empty{background:transparent;border-color:transparent;cursor:default}
+.cal-legend{display:flex;gap:16px;margin-top:10px;font-size:11px;color:var(--color-text-secondary)}
+.leg-dot{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:middle}
+.msg-thread{display:flex;flex-direction:column;gap:12px}
+.msg-group{font-size:12px;font-weight:500;color:var(--color-text-tertiary);margin-top:4px}
+.msg-bubble{display:flex;gap:10px;align-items:flex-start}
+.msg-avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;flex-shrink:0}
+.msg-av-blue{background:#B5D4F4;color:#0C447C}
+.msg-av-teal{background:#9FE1CB;color:#085041}
+.msg-av-amber{background:#FAC775;color:#633806}
+.msg-content{flex:1}
+.msg-name{font-size:11px;color:var(--color-text-tertiary);margin-bottom:2px}
+.msg-text{font-size:13px;background:var(--color-background-secondary);padding:8px 12px;border-radius:var(--border-radius-md);line-height:1.5}
+.msg-mine .msg-text{background:#E6F1FB;color:#042C53}
+.msg-input-row{display:flex;gap:8px;margin-top:16px;align-items:center}
+.msg-input-row input{flex:1;font-size:13px;padding:8px 12px;border-radius:var(--border-radius-md)}
+.appt-table{width:100%;font-size:13px;border-collapse:collapse}
+.appt-table th{text-align:left;font-size:11px;color:var(--color-text-tertiary);font-weight:500;padding:6px 8px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.appt-table td{padding:10px 8px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.appt-table tr:last-child td{border-bottom:none}
+.doc-list{display:flex;flex-direction:column;gap:10px}
+.doc-item{display:flex;align-items:center;gap:12px;padding:12px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md)}
+.doc-icon{width:36px;height:36px;border-radius:var(--border-radius-md);background:#E6F1FB;display:flex;align-items:center;justify-content:center;color:#185FA5;font-size:18px;flex-shrink:0}
+.doc-info{flex:1}
+.doc-name{font-size:13px;font-weight:500}
+.doc-meta{font-size:11px;color:var(--color-text-tertiary);margin-top:2px}
+.group-tabs{display:flex;gap:4px;margin-bottom:16px}
+.group-tab{font-size:12px;padding:5px 12px;border-radius:var(--border-radius-md);cursor:pointer;border:0.5px solid var(--color-border-secondary);background:var(--color-background-secondary);color:var(--color-text-secondary)}
+.group-tab.active{background:#185FA5;color:#E6F1FB;border-color:#185FA5}
+.empty-state{text-align:center;padding:40px 20px;color:var(--color-text-tertiary);font-size:13px}
+</style>
+
+<h2 class="sr-only">URC Match Official Availability Platform — interactive demo</h2>
+
+<div class="app">
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">URC Officials</div>
+      <div class="sidebar-sub">Match Management</div>
+      <span class="role-badge" id="role-label">Admin</span>
+    </div>
+    <nav class="nav">
+      <div class="nav-item active" onclick="showScreen('dashboard',this)"><i class="ti ti-layout-dashboard" aria-hidden="true"></i> Dashboard</div>
+      <div class="nav-item" onclick="showScreen('fixtures',this)"><i class="ti ti-ball-football" aria-hidden="true"></i> Fixtures</div>
+      <div class="nav-item" onclick="showScreen('availability',this)"><i class="ti ti-calendar" aria-hidden="true"></i> Availability</div>
+      <div class="nav-item" onclick="showScreen('appointments',this)"><i class="ti ti-clipboard-list" aria-hidden="true"></i> Appointments</div>
+      <div class="nav-item" onclick="showScreen('messaging',this)"><i class="ti ti-message-2" aria-hidden="true"></i> Messaging</div>
+      <div class="nav-item" onclick="showScreen('docs',this)"><i class="ti ti-file-description" aria-hidden="true"></i> MD Docs</div>
+    </nav>
+    <div class="role-switcher">
+      <label>Demo as role</label>
+      <select id="role-select" onchange="switchRole(this.value)">
+        <option value="admin">Admin / Booker</option>
+        <option value="manager">Manager / Approver</option>
+        <option value="official">Match Official</option>
+        <option value="viewer">Viewer</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <h2 id="screen-title">Dashboard</h2>
+      <div class="topbar-actions" id="topbar-actions">
+        <button class="btn btn-primary" onclick="sendPrompt('Tell me more about the features in the dashboard screen of the URC match official platform')">Explore features ↗</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div class="screen active" id="screen-dashboard">
+        <div class="stat-grid">
+          <div class="stat"><div class="stat-label">Upcoming fixtures</div><div class="stat-val blue">18</div></div>
+          <div class="stat"><div class="stat-label">Appointed</div><div class="stat-val green">12</div></div>
+          <div class="stat"><div class="stat-label">Pending</div><div class="stat-val amber">4</div></div>
+          <div class="stat"><div class="stat-label">Vacant</div><div class="stat-val red">2</div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Upcoming fixtures this weekend</div>
+          <div class="fixture-row"><div class="fix-date">Sat 17 May</div><div class="fix-teams">Leinster v Ulster</div><div class="fix-venue">RDS Arena, Dublin</div><span class="badge badge-appointed">Appointed</span></div>
+          <div class="fixture-row"><div class="fix-date">Sat 17 May</div><div class="fix-teams">Glasgow v Edinburgh</div><div class="fix-venue">Scotstoun, Glasgow</div><span class="badge badge-pending">Pending</span></div>
+          <div class="fixture-row"><div class="fix-date">Sun 18 May</div><div class="fix-teams">Lions v Sharks</div><div class="fix-venue">Ellis Park, JHB</div><span class="badge badge-appointed">Appointed</span></div>
+          <div class="fixture-row"><div class="fix-date">Sun 18 May</div><div class="fix-teams">Munster v Connacht</div><div class="fix-venue">Thomond Park</div><span class="badge badge-vacant">Vacant</span></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Recent availability updates</div>
+          <div class="fixture-row"><div class="fix-date">2h ago</div><div class="fix-teams">Wayne Barnes</div><div class="fix-venue">Marked unavailable 17–19 May</div><span class="badge badge-vacant">Updated</span></div>
+          <div class="fixture-row"><div class="fix-date">4h ago</div><div class="fix-teams">Frank Murphy</div><div class="fix-venue">Available all of May</div><span class="badge badge-appointed">Updated</span></div>
+          <div class="fixture-row"><div class="fix-date">Yesterday</div><div class="fix-teams">Andrea Piardi</div><div class="fix-venue">Unavailable 24–26 May</div><span class="badge badge-vacant">Updated</span></div>
+        </div>
+      </div>
+
+      <!-- FIXTURES -->
+      <div class="screen" id="screen-fixtures">
+        <div class="card">
+          <div class="card-title">Round 19 — May 2026</div>
+          <div class="fixture-row"><div class="fix-date">Fri 16 May</div><div class="fix-teams">Scarlets v Cardiff</div><div class="fix-venue">Parc y Scarlets</div><span class="badge badge-appointed">Appointed</span></div>
+          <div class="fixture-row"><div class="fix-date">Sat 17 May</div><div class="fix-teams">Leinster v Ulster</div><div class="fix-venue">RDS Arena, Dublin</div><span class="badge badge-appointed">Appointed</span></div>
+          <div class="fixture-row"><div class="fix-date">Sat 17 May</div><div class="fix-teams">Glasgow v Edinburgh</div><div class="fix-venue">Scotstoun, Glasgow</div><span class="badge badge-pending">Pending</span></div>
+          <div class="fixture-row"><div class="fix-date">Sat 17 May</div><div class="fix-teams">Bulls v Stormers</div><div class="fix-venue">Loftus Versfeld</div><span class="badge badge-appointed">Appointed</span></div>
+          <div class="fixture-row"><div class="fix-date">Sun 18 May</div><div class="fix-teams">Lions v Sharks</div><div class="fix-venue">Ellis Park, JHB</div><span class="badge badge-appointed">Appointed</span></div>
+          <div class="fixture-row"><div class="fix-date">Sun 18 May</div><div class="fix-teams">Munster v Connacht</div><div class="fix-venue">Thomond Park</div><span class="badge badge-vacant">Vacant</span></div>
+          <div class="fixture-row"><div class="fix-date">Sun 18 May</div><div class="fix-teams">Ospreys v Dragons</div><div class="fix-venue">Swansea.com Stadium</div><span class="badge badge-appointed">Appointed</span></div>
+        </div>
+      </div>
+
+      <!-- AVAILABILITY -->
+      <div class="screen" id="screen-availability">
+        <div class="card">
+          <div class="card-title">May 2026 — <span id="avail-official-name">Your availability</span></div>
+          <div class="cal-grid">
+            <div class="cal-head">Mon</div><div class="cal-head">Tue</div><div class="cal-head">Wed</div><div class="cal-head">Thu</div><div class="cal-head">Fri</div><div class="cal-head">Sat</div><div class="cal-head">Sun</div>
+            <div class="cal-day empty"></div><div class="cal-day empty"></div><div class="cal-day empty"></div>
+            <div class="cal-day avail" title="Available">1</div>
+            <div class="cal-day avail" title="Available">2</div>
+            <div class="cal-day avail" title="Available">3</div>
+            <div class="cal-day avail" title="Available">4</div>
+            <div class="cal-day avail">5</div><div class="cal-day avail">6</div><div class="cal-day avail">7</div><div class="cal-day avail">8</div><div class="cal-day avail">9</div>
+            <div class="cal-day avail">10</div><div class="cal-day avail">11</div>
+            <div class="cal-day avail">12</div><div class="cal-day avail">13</div><div class="cal-day avail">14</div><div class="cal-day avail">15</div>
+            <div class="cal-day avail">16</div><div class="cal-day fixture" title="Fixture: Glasgow v Edinburgh">17<br><span style="font-size:9px">GLA v EDI</span></div><div class="cal-day unavail" title="Unavailable">18</div>
+            <div class="cal-day avail">19</div><div class="cal-day avail">20</div><div class="cal-day avail">21</div><div class="cal-day avail">22</div><div class="cal-day avail">23</div>
+            <div class="cal-day unavail">24</div><div class="cal-day unavail">25</div>
+            <div class="cal-day avail">26</div><div class="cal-day avail">27</div><div class="cal-day avail">28</div><div class="cal-day avail">29</div><div class="cal-day avail">30</div>
+            <div class="cal-day avail">31</div><div class="cal-day empty"></div>
+          </div>
+          <div class="cal-legend">
+            <span><span class="leg-dot" style="background:#EAF3DE;border:0.5px solid #639922"></span>Available</span>
+            <span><span class="leg-dot" style="background:#FCEBEB;border:0.5px solid #E24B4A"></span>Unavailable</span>
+            <span><span class="leg-dot" style="background:#E6F1FB;border:0.5px solid #378ADD"></span>Fixture</span>
+          </div>
+        </div>
+        <div id="avail-admin-view" style="display:block">
+          <div class="card">
+            <div class="card-title">Fleet view — officials' status week of 17 May</div>
+            <table class="appt-table">
+              <thead><tr><th>Official</th><th>Role</th><th>Sat 17</th><th>Sun 18</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td>Wayne Barnes</td><td>Referee</td><td style="color:#A32D2D">Unavail</td><td style="color:#A32D2D">Unavail</td><td><span class="badge badge-vacant">Blocked</span></td></tr>
+                <tr><td>Frank Murphy</td><td>Referee</td><td style="color:#3B6D11">Avail</td><td style="color:#3B6D11">Avail</td><td><span class="badge badge-appointed">Ready</span></td></tr>
+                <tr><td>Andrea Piardi</td><td>AR</td><td style="color:#3B6D11">Avail</td><td style="color:#A32D2D">Unavail</td><td><span class="badge badge-pending">Partial</span></td></tr>
+                <tr><td>Joy Neville</td><td>TMO</td><td style="color:#3B6D11">Avail</td><td style="color:#3B6D11">Avail</td><td><span class="badge badge-appointed">Ready</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- APPOINTMENTS -->
+      <div class="screen" id="screen-appointments">
+        <div class="card">
+          <div class="card-title">Appointment board — Round 19</div>
+          <table class="appt-table">
+            <thead><tr><th>Fixture</th><th>Referee</th><th>AR 1</th><th>AR 2</th><th>TMO</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td>Leinster v Ulster</td><td>F. Murphy</td><td>C. Ridley</td><td>A. Piardi</td><td>J. Neville</td><td><span class="badge badge-appointed">Full panel</span></td></tr>
+              <tr><td>Glasgow v Edinburgh</td><td>B. O'Keeffe</td><td>—</td><td>—</td><td>—</td><td><span class="badge badge-pending">Partial</span></td></tr>
+              <tr><td>Lions v Sharks</td><td>A. Brace</td><td>M. Adamson</td><td>S. Walker</td><td>T. Jonker</td><td><span class="badge badge-appointed">Full panel</span></td></tr>
+              <tr><td>Munster v Connacht</td><td>—</td><td>—</td><td>—</td><td>—</td><td><span class="badge badge-vacant">Vacant</span></td></tr>
+              <tr><td>Bulls v Stormers</td><td>M. Mitrea</td><td>P. Haycock</td><td>R. Poite</td><td>G. Garner</td><td><span class="badge badge-appointed">Full panel</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div id="appt-approve-section">
+          <div class="card">
+            <div class="card-title">Pending approvals</div>
+            <div class="fixture-row"><div class="fix-teams">Glasgow v Edinburgh — partial panel</div><button class="btn" style="font-size:11px;padding:4px 10px;margin-left:auto" onclick="sendPrompt('How would the appointment approval workflow work in the URC Match Official platform?')">Approve ↗</button></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MESSAGING -->
+      <div class="screen" id="screen-messaging">
+        <div class="group-tabs">
+          <div class="group-tab active" onclick="switchGroup(this,'rd19')">Round 19 Panel</div>
+          <div class="group-tab" onclick="switchGroup(this,'refs')">All Referees</div>
+          <div class="group-tab" onclick="switchGroup(this,'md')">Match Day — Lions</div>
+        </div>
+        <div class="card" style="height:320px;overflow-y:auto" id="msg-area">
+          <div class="msg-thread">
+            <div class="msg-group">Today</div>
+            <div class="msg-bubble">
+              <div class="msg-avatar msg-av-blue">PL</div>
+              <div class="msg-content"><div class="msg-name">Paul (Admin)</div><div class="msg-text">Hi all — appointment packs for Round 19 have been uploaded to MD Docs. Please review before Thursday.</div></div>
+            </div>
+            <div class="msg-bubble">
+              <div class="msg-avatar msg-av-teal">FM</div>
+              <div class="msg-content"><div class="msg-name">Frank Murphy</div><div class="msg-text">Thanks Paul, received. Will review tonight.</div></div>
+            </div>
+            <div class="msg-bubble">
+              <div class="msg-avatar msg-av-amber">JN</div>
+              <div class="msg-content"><div class="msg-name">Joy Neville</div><div class="msg-text">Got it. Quick question — is the TMO briefing still at 13:00 on Saturday?</div></div>
+            </div>
+            <div class="msg-bubble msg-mine" style="flex-direction:row-reverse">
+              <div class="msg-avatar msg-av-blue">PL</div>
+              <div class="msg-content" style="text-align:right"><div class="msg-name">You</div><div class="msg-text">Yes, 13:00 confirmed. I'll send the Zoom link shortly.</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="msg-input-row">
+          <input type="text" placeholder="Type a message..." id="msg-input" />
+          <button class="btn btn-primary" onclick="sendMsg()"><i class="ti ti-send" aria-hidden="true"></i></button>
+        </div>
+      </div>
+
+      <!-- MD DOCS -->
+      <div class="screen" id="screen-docs">
+        <div class="doc-list">
+          <div class="doc-item"><div class="doc-icon"><i class="ti ti-file-description" aria-hidden="true"></i></div><div class="doc-info"><div class="doc-name">Leinster v Ulster — Match Day Pack</div><div class="doc-meta">Round 19 · Created 12 May · PDF</div></div><button class="btn" style="font-size:11px">View</button></div>
+          <div class="doc-item"><div class="doc-icon"><i class="ti ti-file-description" aria-hidden="true"></i></div><div class="doc-info"><div class="doc-name">Lions v Sharks — Match Day Pack</div><div class="doc-meta">Round 19 · Created 12 May · PDF</div></div><button class="btn" style="font-size:11px">View</button></div>
+          <div class="doc-item"><div class="doc-icon"><i class="ti ti-file-description" aria-hidden="true"></i></div><div class="doc-info"><div class="doc-name">Referee Briefing Notes — Round 19</div><div class="doc-meta">All officials · Created 11 May · DOCX</div></div><button class="btn" style="font-size:11px">View</button></div>
+          <div class="doc-item"><div class="doc-icon"><i class="ti ti-file-description" aria-hidden="true"></i></div><div class="doc-info"><div class="doc-name">TMO Protocol — 2025/26 Season</div><div class="doc-meta">Standing doc · Updated 3 Feb · PDF</div></div><button class="btn" style="font-size:11px">View</button></div>
+          <div id="doc-create-btn" style="margin-top:4px">
+            <button class="btn btn-primary" onclick="sendPrompt('What would the matchday document creation workflow look like in the URC Match Official platform?')">+ Create new MD Doc ↗</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const screens={dashboard:'Dashboard',fixtures:'Fixtures',availability:'Availability calendar',appointments:'Appointments',messaging:'Messaging',docs:'MD Docs'};
+const roleLabels={admin:'Admin / Booker',manager:'Manager / Approver',official:'Match Official',viewer:'Viewer'};
+
+function showScreen(id,el){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+  if(el)el.classList.add('active');
+  document.getElementById('screen-title').textContent=screens[id];
+}
+
+function switchRole(role){
+  document.getElementById('role-label').textContent=roleLabels[role];
+  const isOfficial=role==='official';
+  const isViewer=role==='viewer';
+  const isManager=role==='manager';
+  document.getElementById('avail-official-name').textContent=isOfficial?'Your availability — Frank Murphy':'Fleet view';
+  document.getElementById('avail-admin-view').style.display=isOfficial?'none':'block';
+  const apprSec=document.getElementById('appt-approve-section');
+  apprSec.style.display=(isManager||role==='admin')?'block':'none';
+  const docBtn=document.getElementById('doc-create-btn');
+  docBtn.style.display=(isViewer||isOfficial)?'none':'block';
+}
+
+function switchGroup(el,group){
+  document.querySelectorAll('.group-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  const area=document.getElementById('msg-area');
+  if(group==='md'){
+    area.innerHTML='<div class="msg-thread"><div class="msg-group">Match day — Lions v Sharks</div><div class="msg-bubble"><div class="msg-avatar msg-av-blue">PL</div><div class="msg-content"><div class="msg-name">Paul (Admin)</div><div class="msg-text">Morning all. Kick-off 15:00 local. Dressing rooms open at 12:30. Any issues, contact Charl directly.</div></div></div></div>';
+  } else if(group==='refs'){
+    area.innerHTML='<div class="msg-thread"><div class="msg-group">All Referees</div><div class="msg-bubble"><div class="msg-avatar msg-av-blue">PL</div><div class="msg-content"><div class="msg-name">Paul (Admin)</div><div class="msg-text">Reminder: availability windows for the play-off rounds must be submitted by Friday 23 May.</div></div></div></div>';
+  } else {
+    area.innerHTML='<div class="msg-thread"><div class="msg-group">Today</div><div class="msg-bubble"><div class="msg-avatar msg-av-blue">PL</div><div class="msg-content"><div class="msg-name">Paul (Admin)</div><div class="msg-text">Hi all — appointment packs for Round 19 have been uploaded to MD Docs. Please review before Thursday.</div></div></div><div class="msg-bubble"><div class="msg-avatar msg-av-teal">FM</div><div class="msg-content"><div class="msg-name">Frank Murphy</div><div class="msg-text">Thanks Paul, received. Will review tonight.</div></div></div></div>';
+  }
+}
+
+function sendMsg(){
+  const inp=document.getElementById('msg-input');
+  if(!inp.value.trim())return;
+  const area=document.getElementById('msg-area').querySelector('.msg-thread');
+  const div=document.createElement('div');
+  div.className='msg-bubble msg-mine';
+  div.style.flexDirection='row-reverse';
+  div.innerHTML='<div class="msg-avatar msg-av-blue">PL</div><div class="msg-content" style="text-align:right"><div class="msg-name">You</div><div class="msg-text">'+inp.value+'</div></div>';
+  area.appendChild(div);
+  inp.value='';
+  document.getElementById('msg-area').scrollTop=9999;
+}
+</script>

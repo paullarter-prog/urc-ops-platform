@@ -1,0 +1,378 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);font-size:14px;color:var(--color-text-primary)}
+.app{display:flex;height:720px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;background:var(--color-background-primary)}
+.sidebar{width:230px;flex-shrink:0;border-right:0.5px solid var(--color-border-tertiary);display:flex;flex-direction:column;background:var(--color-background-secondary)}
+.sb-top{padding:12px 14px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-primary)}
+.sb-profile{display:flex;align-items:center;gap:10px}
+.sb-avatar{width:36px;height:36px;border-radius:50%;background:#9FE1CB;color:#085041;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;flex-shrink:0}
+.sb-name{font-size:13px;font-weight:500}
+.sb-role{font-size:10px;color:var(--color-text-tertiary);margin-top:1px}
+.sb-union{font-size:9px;padding:2px 6px;border-radius:3px;margin-top:3px;display:inline-block;background:#EEEDFE;color:#3C3489}
+.sb-nav{padding:8px 0;border-bottom:0.5px solid var(--color-border-tertiary)}
+.sb-nav-item{display:flex;align-items:center;gap:8px;padding:7px 14px;font-size:12px;color:var(--color-text-secondary);cursor:pointer;border-left:2px solid transparent}
+.sb-nav-item:hover{background:var(--color-background-primary);color:var(--color-text-primary)}
+.sb-nav-item.active{border-left:2px solid #378ADD;background:var(--color-background-primary);color:var(--color-text-primary);font-weight:500}
+.sb-nav-item i{font-size:15px}
+.unread-dot{width:6px;height:6px;border-radius:50%;background:#E24B4A;margin-left:auto}
+.appt-list{flex:1;overflow-y:auto;padding:8px}
+.appt-list-title{font-size:10px;color:var(--color-text-tertiary);font-weight:500;text-transform:uppercase;letter-spacing:0.04em;padding:4px 6px 6px}
+.appt-item{padding:8px 10px;border-radius:var(--border-radius-md);cursor:pointer;margin-bottom:4px;border:0.5px solid transparent}
+.appt-item:hover{background:var(--color-background-primary);border-color:var(--color-border-tertiary)}
+.appt-item.active{background:var(--color-background-primary);border-color:#85B7EB}
+.appt-fix{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.appt-meta{font-size:10px;color:var(--color-text-tertiary);margin-top:2px}
+.appt-status{display:flex;align-items:center;gap:4px;margin-top:3px}
+.status-dot{width:5px;height:5px;border-radius:50%}
+.sd-new{background:#E24B4A}
+.sd-conf{background:#3B6D11}
+.sd-pend{background:#BA7517}
+.status-txt{font-size:10px}
+.stc-new{color:#A32D2D}.stc-conf{color:#3B6D11}.stc-pend{color:#BA7517}
+.main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+.topbar{padding:10px 18px;border-bottom:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.tb-left{display:flex;flex-direction:column;gap:1px}
+.tb-title{font-size:14px;font-weight:500}
+.tb-sub{font-size:10px;color:var(--color-text-tertiary)}
+.content{flex:1;overflow-y:auto;padding:16px 18px}
+.notif-banner{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:var(--border-radius-lg);margin-bottom:14px;border:0.5px solid}
+.nb-new{background:#E6F1FB;border-color:#85B7EB;color:#042C53}
+.nb-conf{background:#EAF3DE;border-color:#C0DD97;color:#173404}
+.nb-pend{background:#FAEEDA;border-color:#FAC775;color:#412402}
+.nb-icon{font-size:20px;flex-shrink:0;margin-top:2px}
+.nb-body{flex:1}
+.nb-title{font-size:13px;font-weight:500;margin-bottom:2px}
+.nb-text{font-size:11px;line-height:1.6}
+.nb-time{font-size:10px;margin-top:4px;opacity:0.7}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px;margin-bottom:12px}
+.card-title{font-size:11px;font-weight:500;color:var(--color-text-secondary);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+.fix-hero{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:14px;margin-bottom:12px}
+.fix-teams{font-size:18px;font-weight:500;margin-bottom:6px}
+.fix-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.fix-detail{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--color-text-secondary)}
+.fix-detail i{font-size:13px;color:var(--color-text-tertiary)}
+.role-hero{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:var(--border-radius-md);font-size:12px;font-weight:500;margin-bottom:12px}
+.rh-neutral{background:#E6F1FB;color:#0C447C;border:0.5px solid #85B7EB}
+.rh-home{background:#EAF3DE;color:#27500A;border:0.5px solid #C0DD97}
+.panel-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.panel-row{display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary);font-size:11px;background:var(--color-background-secondary)}
+.panel-row.me{background:#E6F1FB;border-color:#85B7EB;font-weight:500}
+.pr-role{font-size:9px;color:var(--color-text-tertiary);width:80px;flex-shrink:0}
+.pr-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.travel-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.travel-item{padding:10px;border-radius:var(--border-radius-md);background:var(--color-background-secondary);font-size:11px}
+.travel-label{font-size:10px;color:var(--color-text-tertiary);margin-bottom:3px}
+.travel-val{font-weight:500;font-size:12px}
+.travel-sub{font-size:10px;color:var(--color-text-secondary);margin-top:2px}
+.doc-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary);margin-bottom:6px}
+.doc-icon{width:32px;height:32px;border-radius:var(--border-radius-md);background:#E6F1FB;display:flex;align-items:center;justify-content:center;color:#185FA5;font-size:16px;flex-shrink:0}
+.doc-name{font-size:12px;font-weight:500;flex:1}
+.doc-meta{font-size:10px;color:var(--color-text-tertiary);margin-top:1px}
+.badge{font-size:9px;padding:2px 6px;border-radius:var(--border-radius-md)}
+.b-unread{background:#FCEBEB;color:#791F1F}
+.b-read{background:#EAF3DE;color:#27500A}
+.b-new{background:#E6F1FB;color:#0C447C}
+.btn{font-size:11px;padding:6px 12px;border-radius:var(--border-radius-md);cursor:pointer;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary)}
+.btn:hover{background:var(--color-background-secondary)}
+.btn-primary{background:#185FA5;color:#E6F1FB;border-color:#185FA5}
+.btn-primary:hover{background:#0C447C}
+.btn-success{background:#3B6D11;color:#EAF3DE;border-color:#3B6D11}
+.btn-success:hover{background:#27500A}
+.btn-warn{background:#BA7517;color:#FAEEDA;border-color:#BA7517}
+.confirm-box{padding:14px;border-radius:var(--border-radius-lg);border:0.5px solid var(--color-border-tertiary);margin-bottom:12px}
+.confirm-question{font-size:13px;font-weight:500;margin-bottom:8px}
+.confirm-sub{font-size:11px;color:var(--color-text-secondary);margin-bottom:12px}
+.confirm-btns{display:flex;gap:8px}
+.confirmed-state{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:var(--border-radius-md);background:#EAF3DE;border:0.5px solid #C0DD97;font-size:12px;color:#173404}
+.conflict-note{padding:8px 10px;border-radius:var(--border-radius-md);background:#FAEEDA;border:0.5px solid #FAC775;font-size:11px;color:#412402;margin-bottom:6px;display:flex;gap:6px;align-items:flex-start}
+.tab-row{display:flex;gap:4px;margin-bottom:14px}
+.tab{font-size:11px;padding:5px 12px;border-radius:var(--border-radius-md);cursor:pointer;border:0.5px solid var(--color-border-secondary);background:var(--color-background-secondary);color:var(--color-text-secondary)}
+.tab.on{background:#185FA5;color:#E6F1FB;border-color:#185FA5}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;color:var(--color-text-tertiary);font-size:12px;gap:8px;text-align:center}
+.empty-state i{font-size:28px}
+</style>
+
+<h2 class="sr-only">URC Match Official — appointment notification and confirmation view</h2>
+
+<div class="app">
+<div class="sidebar">
+  <div class="sb-top">
+    <div class="sb-profile">
+      <div class="sb-avatar">FM</div>
+      <div>
+        <div class="sb-name">Frank Murphy</div>
+        <div class="sb-role">Referee</div>
+        <div class="sb-union">Ireland (IRFU)</div>
+      </div>
+    </div>
+  </div>
+  <div class="sb-nav">
+    <div class="sb-nav-item active"><i class="ti ti-bell" aria-hidden="true"></i> Notifications <div class="unread-dot"></div></div>
+    <div class="sb-nav-item"><i class="ti ti-calendar" aria-hidden="true"></i> My calendar</div>
+    <div class="sb-nav-item"><i class="ti ti-clipboard-list" aria-hidden="true"></i> My appointments</div>
+    <div class="sb-nav-item"><i class="ti ti-message-2" aria-hidden="true"></i> Messages</div>
+  </div>
+  <div class="appt-list">
+    <div class="appt-list-title">Upcoming appointments</div>
+    <div class="appt-item active" onclick="showAppt('gla')">
+      <div class="appt-fix">Glasgow v Edinburgh</div>
+      <div class="appt-meta">Sat 17 May · Referee</div>
+      <div class="appt-status"><div class="status-dot sd-new"></div><span class="status-txt stc-new">Action required</span></div>
+    </div>
+    <div class="appt-item" onclick="showAppt('lions')">
+      <div class="appt-fix">Lions v Sharks</div>
+      <div class="appt-meta">Sun 25 May · Referee</div>
+      <div class="appt-status"><div class="status-dot sd-conf"></div><span class="status-txt stc-conf">Confirmed</span></div>
+    </div>
+    <div class="appt-item" onclick="showAppt('final')">
+      <div class="appt-fix">URC Grand Final</div>
+      <div class="appt-meta">Sat 31 May · TBC</div>
+      <div class="appt-status"><div class="status-dot sd-pend"></div><span class="status-txt stc-pend">Provisional</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <div class="tb-left">
+      <div class="tb-title" id="tb-title">Glasgow v Edinburgh</div>
+      <div class="tb-sub" id="tb-sub">Appointment notification · Action required</div>
+    </div>
+    <div id="tb-badge"></div>
+  </div>
+  <div class="content" id="main-content"></div>
+</div>
+</div>
+
+<script>
+let confirmed={gla:false,lions:true,final:false};
+let activeAppt='gla';
+
+const APPTS={
+  gla:{
+    fix:'Glasgow v Edinburgh',
+    venue:'Scotstoun, Glasgow',
+    ko:'Saturday 17 May 2026 · 15:15 BST',
+    round:'Round 19 · URC 2025/26',
+    role:'Referee',
+    roleType:'neutral',
+    status:'new',
+    received:'Today · 09:32',
+    deadline:'Thu 15 May · 17:00',
+    travel:{
+      flight:'Edinburgh via Glasgow International',
+      hotel:'Radisson Blu, Glasgow City Centre',
+      checkin:'Fri 16 May',
+      transport:'URC car: collect 13:30 Sat from hotel',
+    },
+    panel:[
+      {role:'Referee',name:'Frank Murphy',me:true},
+      {role:'AR1',name:'Mike Adamson',me:false},
+      {role:'AR2',name:'Alasdair Stewart',me:false},
+      {role:'AR4',name:'Scott Glancy',me:false},
+      {role:'AR5',name:'Callum Murray',me:false},
+      {role:'TMO',name:'Glenn Newman',me:false},
+      {role:'TMO Operator',name:'Ross McNeil',me:false},
+      {role:'SLM',name:'Derek Brown',me:false},
+      {role:'Timekeeper',name:'Robert Kelly',me:false},
+      {role:'Citing Comm.',name:'Euan Black',me:false},
+    ],
+    docs:[
+      {name:'Match Day Pack — Glasgow v Edinburgh',meta:'Round 19 · Issued 14 May · PDF',read:false},
+      {name:'Referee Briefing Notes R19',meta:'All officials · PDF',read:false},
+      {name:'Scotstoun Venue Guide',meta:'Ground info & contacts · PDF',read:true},
+    ],
+    notifText:'You have been appointed as <strong>Referee</strong> for <strong>Glasgow v Edinburgh</strong>, Round 19. Please confirm your appointment below.',
+  },
+  lions:{
+    fix:'Lions v Sharks',
+    venue:'Ellis Park, Johannesburg',
+    ko:'Sunday 25 May 2026 · 15:00 SAST',
+    round:'Round 20 · URC 2025/26',
+    role:'Referee',
+    roleType:'neutral',
+    status:'confirmed',
+    received:'Mon 12 May · 11:00',
+    deadline:null,
+    travel:{
+      flight:'Dublin → Johannesburg via London · Wed 21 May',
+      hotel:'The Maslow, Sandton',
+      checkin:'Wed 21 May',
+      transport:'URC car: collect 12:00 Sun from hotel',
+    },
+    panel:[
+      {role:'Referee',name:'Frank Murphy',me:true},
+      {role:'AR1',name:'Sifiso Sithole',me:false},
+      {role:'AR2',name:'Lourens Munro',me:false},
+      {role:'AR4',name:'Riaan Botha',me:false},
+      {role:'AR5',name:'Deon Teach',me:false},
+      {role:'TMO',name:'Ton Jonker',me:false},
+      {role:'TMO Operator',name:'Neil Louw',me:false},
+      {role:'SLM',name:'Carlo Visser',me:false},
+      {role:'Timekeeper',name:'Jan Pretorius',me:false},
+      {role:'Citing Comm.',name:'Pieter Ferreira',me:false},
+    ],
+    docs:[
+      {name:'Match Day Pack — Lions v Sharks',meta:'Round 20 · Issued 13 May · PDF',read:true},
+      {name:'Ellis Park Venue Guide',meta:'Ground info & contacts · PDF',read:true},
+      {name:'TMO Protocol 2025/26',meta:'Standing doc · PDF',read:true},
+    ],
+    notifText:'You have been appointed as <strong>Referee</strong> for <strong>Lions v Sharks</strong>, Round 20.',
+  },
+  final:{
+    fix:'URC Grand Final',
+    venue:'TBC',
+    ko:'Saturday 31 May 2026 · TBC',
+    round:'Grand Final · URC 2025/26',
+    role:'Referee (provisional)',
+    roleType:'neutral',
+    status:'provisional',
+    received:'Today · 10:15',
+    deadline:'Mon 19 May · 12:00',
+    travel:null,
+    panel:null,
+    docs:[],
+    notifText:'You have been <strong>provisionally selected</strong> as Referee for the <strong>URC Grand Final</strong>. This is subject to confirmation following semi-final outcomes. Please mark your availability and confirm you are free to travel.',
+  },
+};
+
+function showAppt(id){
+  activeAppt=id;
+  document.querySelectorAll('.appt-item').forEach((el,i)=>{
+    el.classList.toggle('active',['gla','lions','final'][i]===id);
+  });
+  renderMain();
+}
+
+function renderMain(){
+  const a=APPTS[activeAppt];
+  const isConf=confirmed[activeAppt];
+  const status=isConf?'confirmed':a.status;
+
+  // topbar
+  document.getElementById('tb-title').textContent=a.fix;
+  const statusLabels={new:'Action required',confirmed:'Confirmed',provisional:'Provisional — action required'};
+  document.getElementById('tb-sub').textContent=`Appointment notification · ${statusLabels[status]||status}`;
+  const badgeMap={new:'<span class="badge b-new">New</span>',confirmed:'<span class="badge" style="background:#EAF3DE;color:#27500A;font-size:10px;padding:3px 8px">✓ Confirmed</span>',provisional:'<span class="badge b-unread">Provisional</span>'};
+  document.getElementById('tb-badge').innerHTML=badgeMap[status]||'';
+
+  // notification banner
+  const bannerCls={new:'nb-new',confirmed:'nb-conf',provisional:'nb-pend'};
+  const bannerIcon={new:'ti-bell',confirmed:'ti-circle-check',provisional:'ti-alert-circle'};
+  let banner=`<div class="notif-banner ${bannerCls[status]||'nb-new'}">
+    <i class="ti ${bannerIcon[status]||'ti-bell'} nb-icon" aria-hidden="true"></i>
+    <div class="nb-body">
+      <div class="nb-title">${status==='confirmed'?'Appointment confirmed':status==='provisional'?'Provisional selection':'New appointment'}</div>
+      <div class="nb-text">${a.notifText}</div>
+      <div class="nb-time">Received: ${a.received}${a.deadline?` · Confirmation deadline: <strong>${a.deadline}</strong>`:''}</div>
+    </div>
+  </div>`;
+
+  // fixture hero
+  let hero=`<div class="fix-hero">
+    <div class="fix-teams">${a.fix}</div>
+    <div class="fix-detail-grid">
+      <div class="fix-detail"><i class="ti ti-map-pin" aria-hidden="true"></i>${a.venue}</div>
+      <div class="fix-detail"><i class="ti ti-clock" aria-hidden="true"></i>${a.ko}</div>
+      <div class="fix-detail"><i class="ti ti-trophy" aria-hidden="true"></i>${a.round}</div>
+      <div class="fix-detail"><i class="ti ti-user" aria-hidden="true"></i>Your role: <strong style="margin-left:3px">${a.role}</strong></div>
+    </div>
+  </div>
+  <div class="role-hero ${a.roleType==='neutral'?'rh-neutral':'rh-home'}">
+    <i class="ti ${a.roleType==='neutral'?'ti-world':'ti-home'}" aria-hidden="true"></i>
+    ${a.roleType==='neutral'?'Neutral appointment — URC-appointed role':'Home union appointment'}
+  </div>`;
+
+  // confirmation box
+  let confirmHtml='';
+  if(status==='new'||status==='provisional'){
+    confirmHtml=`<div class="confirm-box">
+      <div class="confirm-question">Do you confirm your availability for this appointment?</div>
+      <div class="confirm-sub">By confirming, you acknowledge the fixture details above and commit to attending. If you need to withdraw, contact the URC Match Officials team immediately.</div>
+      <div class="confirm-btns">
+        <button class="btn btn-warn" onclick="declineAppt()"><i class="ti ti-x" style="font-size:12px;vertical-align:-1px" aria-hidden="true"></i> Cannot attend</button>
+        <button class="btn btn-success" onclick="confirmAppt()"><i class="ti ti-check" style="font-size:12px;vertical-align:-1px" aria-hidden="true"></i> Confirm appointment</button>
+      </div>
+    </div>`;
+  } else if(status==='confirmed'){
+    confirmHtml=`<div class="confirmed-state">
+      <i class="ti ti-circle-check" style="font-size:18px" aria-hidden="true"></i>
+      <div><div style="font-weight:500">You confirmed this appointment</div><div style="font-size:10px;opacity:0.8;margin-top:1px">Confirmed ${activeAppt==='lions'?'Mon 12 May · 11:45':'just now'}</div></div>
+      <button class="btn" style="margin-left:auto;font-size:10px;padding:4px 8px" onclick="withdrawAppt()">Withdraw</button>
+    </div>`;
+  }
+
+  // panel
+  let panelHtml='';
+  if(a.panel){
+    const rows=a.panel.map(p=>`<div class="panel-row ${p.me?'me':''}">
+      <span class="pr-role">${p.role}</span>
+      <span class="pr-name">${p.name}${p.me?' (you)':''}</span>
+    </div>`).join('');
+    panelHtml=`<div class="card"><div class="card-title">Full panel</div><div class="panel-grid">${rows}</div></div>`;
+  } else {
+    panelHtml=`<div class="card"><div class="card-title">Panel</div><div style="font-size:11px;color:var(--color-text-tertiary);padding:4px 0">Panel will be confirmed once semi-final outcomes are known.</div></div>`;
+  }
+
+  // travel
+  let travelHtml='';
+  if(a.travel){
+    travelHtml=`<div class="card"><div class="card-title">Travel & logistics</div>
+      <div class="travel-grid">
+        <div class="travel-item"><div class="travel-label">Flight</div><div class="travel-val">${a.travel.flight}</div></div>
+        <div class="travel-item"><div class="travel-label">Hotel</div><div class="travel-val">${a.travel.hotel}</div><div class="travel-sub">Check-in: ${a.travel.checkin}</div></div>
+        <div class="travel-item" style="grid-column:1/-1"><div class="travel-label">Match day transport</div><div class="travel-val">${a.travel.transport}</div></div>
+      </div>
+    </div>`;
+  } else if(a.status==='provisional'){
+    travelHtml=`<div class="card"><div class="card-title">Travel & logistics</div><div style="font-size:11px;color:var(--color-text-tertiary);padding:4px 0">Travel details will be confirmed once the appointment is finalised.</div></div>`;
+  }
+
+  // docs
+  let docsHtml='';
+  if(a.docs.length){
+    const docRows=a.docs.map(d=>`<div class="doc-item">
+      <div class="doc-icon"><i class="ti ti-file-description" aria-hidden="true"></i></div>
+      <div style="flex:1;min-width:0"><div class="doc-name">${d.name}</div><div class="doc-meta">${d.meta}</div></div>
+      <span class="badge ${d.read?'b-read':'b-unread'}">${d.read?'Read':'Unread'}</span>
+    </div>`).join('');
+    docsHtml=`<div class="card"><div class="card-title">Match day documents <span style="font-size:10px;color:#185FA5;cursor:pointer;font-weight:400">View all</span></div>${docRows}</div>`;
+  }
+
+  // tabs for different sections
+  document.getElementById('main-content').innerHTML=`
+    ${banner}
+    ${hero}
+    ${confirmHtml}
+    <div style="height:4px"></div>
+    ${panelHtml}
+    ${travelHtml}
+    ${docsHtml}
+  `;
+}
+
+function confirmAppt(){
+  confirmed[activeAppt]=true;
+  // update sidebar dot
+  const items=document.querySelectorAll('.appt-item');
+  const idx=['gla','lions','final'].indexOf(activeAppt);
+  if(idx>=0){
+    items[idx].querySelector('.status-dot').className='status-dot sd-conf';
+    items[idx].querySelector('.status-txt').className='status-txt stc-conf';
+    items[idx].querySelector('.status-txt').textContent='Confirmed';
+  }
+  renderMain();
+}
+
+function declineAppt(){
+  sendPrompt('An official has declined their appointment for Glasgow v Edinburgh. What happens next in the URC platform workflow?');
+}
+
+function withdrawAppt(){
+  confirmed[activeAppt]=false;
+  renderMain();
+}
+
+showAppt('gla');
+</script>

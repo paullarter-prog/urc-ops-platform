@@ -1,0 +1,357 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);color:var(--color-text-primary)}
+.platform{padding:20px}
+.platform-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;padding-bottom:18px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.ph-left{}
+.ph-logo{font-size:11px;font-weight:500;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px}
+.ph-title{font-size:22px;font-weight:500;line-height:1.2}
+.ph-sub{font-size:13px;color:var(--color-text-secondary);margin-top:4px}
+.ph-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.season-badge{font-size:11px;padding:4px 10px;border-radius:var(--border-radius-md);background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);color:var(--color-text-secondary)}
+.status-row{display:flex;gap:6px}
+.status-dot{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--color-text-secondary)}
+.dot{width:7px;height:7px;border-radius:50%}
+.dot-live{background:#1D9E75}.dot-warn{background:#BA7517}.dot-info{background:#378ADD}
+.stat-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:24px}
+.stat-card{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:12px 14px}
+.stat-label{font-size:10px;color:var(--color-text-tertiary);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.04em}
+.stat-val{font-size:22px;font-weight:500}
+.stat-sub{font-size:10px;color:var(--color-text-secondary);margin-top:2px}
+.sv-blue{color:#185FA5}.sv-green{color:#3B6D11}.sv-amber{color:#BA7517}.sv-red{color:#A32D2D}.sv-teal{color:#0F6E56}
+.modules-title{font-size:11px;font-weight:500;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:12px}
+.module-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px}
+.module-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px;cursor:pointer;transition:border-color 0.15s}
+.module-card:hover{border-color:#85B7EB}
+.module-card.active{border-color:#378ADD;background:#E6F1FB}
+.mc-icon{width:36px;height:36px;border-radius:var(--border-radius-md);display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:10px;flex-shrink:0}
+.mc-icon-blue{background:#E6F1FB;color:#185FA5}
+.mc-icon-teal{background:#E1F5EE;color:#0F6E56}
+.mc-icon-amber{background:#FAEEDA;color:#854F0B}
+.mc-icon-purple{background:#EEEDFE;color:#534AB7}
+.mc-icon-green{background:#EAF3DE;color:#3B6D11}
+.mc-icon-pink{background:#FBEAF0;color:#993556}
+.mc-icon-gray{background:var(--color-background-secondary);color:var(--color-text-secondary)}
+.mc-icon-red{background:#FCEBEB;color:#A32D2D}
+.mc-name{font-size:13px;font-weight:500;margin-bottom:3px}
+.mc-desc{font-size:11px;color:var(--color-text-secondary);line-height:1.4;margin-bottom:8px}
+.mc-tags{display:flex;flex-wrap:wrap;gap:3px}
+.mc-tag{font-size:9px;padding:1px 6px;border-radius:3px;background:var(--color-background-secondary);color:var(--color-text-secondary);border:0.5px solid var(--color-border-tertiary)}
+.mc-built{font-size:9px;padding:1px 6px;border-radius:3px;background:#EAF3DE;color:#3B6D11;border:0.5px solid #C0DD97}
+.mc-partial{font-size:9px;padding:1px 6px;border-radius:3px;background:#FAEEDA;color:#854F0B;border:0.5px solid #FAC775}
+.mc-planned{font-size:9px;padding:1px 6px;border-radius:3px;background:var(--color-background-secondary);color:var(--color-text-tertiary);border:0.5px solid var(--color-border-tertiary)}
+.detail-panel{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:16px;margin-bottom:24px;display:none}
+.detail-panel.visible{display:block}
+.dp-header{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.dp-icon{width:42px;height:42px;border-radius:var(--border-radius-md);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.dp-title{font-size:16px;font-weight:500}
+.dp-sub{font-size:11px;color:var(--color-text-secondary);margin-top:2px}
+.dp-body{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.dp-col-title{font-size:10px;font-weight:500;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px}
+.dp-feature{display:flex;align-items:flex-start;gap:6px;margin-bottom:6px;font-size:12px;color:var(--color-text-secondary)}
+.dp-feature i{font-size:13px;color:#3B6D11;margin-top:1px;flex-shrink:0}
+.dp-user{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.dp-av{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:500;flex-shrink:0}
+.dp-user-info{font-size:11px}
+.dp-user-role{font-size:9px;color:var(--color-text-tertiary)}
+.av-blue{background:#B5D4F4;color:#0C447C}.av-teal{background:#9FE1CB;color:#085041}.av-amber{background:#FAC775;color:#633806}.av-purple{background:#CECBF6;color:#26215C}.av-green{background:#C0DD97;color:#27500A}.av-pink{background:#F4C0D1;color:#4B1528}.av-gray{background:var(--color-background-secondary);color:var(--color-text-secondary)}
+.roles-section{margin-bottom:24px}
+.roles-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.role-card{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 12px}
+.role-name{font-size:12px;font-weight:500;margin-bottom:4px}
+.role-access{font-size:10px;color:var(--color-text-secondary);line-height:1.5}
+.timeline-section{margin-bottom:8px}
+.timeline{display:flex;gap:0;align-items:flex-start}
+.tl-step{flex:1;display:flex;flex-direction:column;align-items:center;position:relative}
+.tl-step:not(:last-child)::after{content:'';position:absolute;top:14px;left:50%;width:100%;height:1px;background:var(--color-border-tertiary);z-index:0}
+.tl-step.done::after{background:#639922}
+.tl-node{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;z-index:1;border:0.5px solid var(--color-border-secondary);background:var(--color-background-secondary);color:var(--color-text-tertiary)}
+.tl-node.done{background:#EAF3DE;border-color:#639922;color:#3B6D11}
+.tl-node.current{background:#E6F1FB;border-color:#378ADD;color:#185FA5}
+.tl-label{font-size:10px;color:var(--color-text-tertiary);margin-top:5px;text-align:center;width:80px;line-height:1.4}
+.tl-label.done{color:#3B6D11;font-weight:500}
+.tl-label.current{color:#185FA5;font-weight:500}
+.explore-btn{display:inline-flex;align-items:center;gap:6px;font-size:11px;padding:6px 12px;border-radius:var(--border-radius-md);cursor:pointer;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);margin-top:12px}
+.explore-btn:hover{background:var(--color-background-secondary)}
+.explore-btn-primary{background:#185FA5;color:#E6F1FB;border-color:#185FA5}
+.explore-btn-primary:hover{background:#0C447C}
+</style>
+
+<h2 class="sr-only">URC Ops Platform — full platform overview showing all eight modules, roles, and build timeline</h2>
+
+<div class="platform">
+
+<div class="platform-header">
+  <div class="ph-left">
+    <div class="ph-logo">United Rugby Championship</div>
+    <div class="ph-title">URC Ops Platform</div>
+    <div class="ph-sub">One platform for every person who touches a URC fixture</div>
+  </div>
+  <div class="ph-right">
+    <div class="season-badge">Season 2025/26</div>
+    <div class="status-row">
+      <div class="status-dot"><div class="dot dot-live"></div>7 modules built / in progress</div>
+      <div class="status-dot"><div class="dot dot-info"></div>September 2026 launch</div>
+    </div>
+  </div>
+</div>
+
+<div class="stat-strip">
+  <div class="stat-card"><div class="stat-label">Fixtures per season</div><div class="stat-val sv-blue">159</div><div class="stat-sub">18 rounds + knockouts</div></div>
+  <div class="stat-card"><div class="stat-label">Match officials</div><div class="stat-val sv-teal">80+</div><div class="stat-sub">Across 5 unions</div></div>
+  <div class="stat-card"><div class="stat-label">Stakeholder groups</div><div class="stat-val sv-purple" style="color:#534AB7">12</div><div class="stat-sub">From officials to broadcast</div></div>
+  <div class="stat-card"><div class="stat-label">Docs per fixture</div><div class="stat-val sv-amber">2+</div><div class="stat-sub">Match summary + agenda</div></div>
+  <div class="stat-card"><div class="stat-label">WhatsApp groups</div><div class="stat-val sv-red">159+</div><div class="stat-sub">Replaced by platform</div></div>
+</div>
+
+<div class="modules-title">Platform modules — click any module to explore</div>
+
+<div class="module-grid" id="module-grid"></div>
+
+<div class="detail-panel" id="detail-panel"></div>
+
+<div class="roles-section">
+  <div class="modules-title">User roles</div>
+  <div class="roles-grid">
+    <div class="role-card">
+      <div class="role-name">URC Admin / Booker</div>
+      <div class="role-access">Full access · Panel builder · Approvals · Doc creator · All messaging · Fixture management</div>
+    </div>
+    <div class="role-card">
+      <div class="role-name">Manager / Approver</div>
+      <div class="role-access">Panel approval · Fleet view · All fixtures · Reports · Messaging</div>
+    </div>
+    <div class="role-card">
+      <div class="role-name">Selector</div>
+      <div class="role-access">Referee & TMO selection · Conflict flags · Available pool view</div>
+    </div>
+    <div class="role-card">
+      <div class="role-name">Match Manager</div>
+      <div class="role-access">Pre-match agenda · Match day docs · Fixture contacts · Messaging</div>
+    </div>
+    <div class="role-card">
+      <div class="role-name">Match Official</div>
+      <div class="role-access">Own availability · Appointments · Panel · Docs · Match day messaging</div>
+    </div>
+    <div class="role-card">
+      <div class="role-name">Club Contact</div>
+      <div class="role-access">Own fixtures · Team sheet submission · Match day messaging</div>
+    </div>
+    <div class="role-card">
+      <div class="role-name">Broadcast Contact</div>
+      <div class="role-access">Own fixtures · Broadcast section · Timings · Messaging</div>
+    </div>
+    <div class="role-card">
+      <div class="role-name">Third Party / Supplier</div>
+      <div class="role-access">Fixture assignments · Relevant docs · Match day messaging</div>
+    </div>
+  </div>
+</div>
+
+<div class="timeline-section">
+  <div class="modules-title">Build timeline toward September 2026 launch</div>
+  <div class="timeline">
+    <div class="tl-step done">
+      <div class="tl-node done"><i class="ti ti-check" aria-hidden="true"></i></div>
+      <div class="tl-label done">Demo built<br>May 2026</div>
+    </div>
+    <div class="tl-step done">
+      <div class="tl-node done"><i class="ti ti-check" aria-hidden="true"></i></div>
+      <div class="tl-label done">Stakeholder sign-off<br>Jun 2026</div>
+    </div>
+    <div class="tl-step current">
+      <div class="tl-node current"><i class="ti ti-code" aria-hidden="true"></i></div>
+      <div class="tl-label current">Technical build<br>Jun–Aug 2026</div>
+    </div>
+    <div class="tl-step">
+      <div class="tl-node"><i class="ti ti-users" aria-hidden="true"></i></div>
+      <div class="tl-label">User testing &amp; onboarding<br>Aug 2026</div>
+    </div>
+    <div class="tl-step">
+      <div class="tl-node"><i class="ti ti-rocket" aria-hidden="true"></i></div>
+      <div class="tl-label">Season launch<br>Sep 2026</div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+const MODULES=[
+  {
+    id:'officials',name:'Match officials',icon:'ti-whistle',iconCls:'mc-icon-blue',status:'built',
+    desc:'Availability, panel builder, appointments and official notifications',
+    tags:['Availability','Panel builder','Appointments','Notifications','Rules engine'],
+    features:['Availability calendar per official','Fleet view across all role groups','Full panel builder with rules engine','Neutral & home union enforcement','Knockout mode (QF/SF/GF)','Approval workflow','Official-facing appointment confirmation'],
+    users:[
+      {init:'PL',av:'av-blue',name:'Paul L',role:'Admin / Booker'},
+      {init:'TH',av:'av-amber',name:'Tappe H',role:'Manager / Approver'},
+      {init:'CC',av:'av-green',name:'Charl C',role:'Selector'},
+      {init:'FM',av:'av-teal',name:'Frank Murphy',role:'Referee'},
+      {init:'JN',av:'av-pink',name:'Joy Neville',role:'TMO'},
+    ],
+    launch:'Built — demo ready',
+    prompt:'Tell me more about the Match Officials module in the URC Ops platform'
+  },
+  {
+    id:'matchmgmt',name:'Match management',icon:'ti-clipboard-list',iconCls:'mc-icon-teal',status:'partial',
+    desc:'Match Summary and Pre-Match Meeting Agenda — structured digital forms per fixture',
+    tags:['Match Summary','Pre-match agenda','Timings','Broadcast logistics','Contacts'],
+    features:['Match Summary doc builder (auto-populated)','Pre-Match Meeting Agenda builder','Interview schedule (pre/in/post-match)','Broadcast logistics checklist','Coin toss & team timings','POTM workflow','Post-match press conference'],
+    users:[
+      {init:'PL',av:'av-blue',name:'Paul L',role:'Admin'},
+      {init:'ER',av:'av-teal',name:'Elaine R',role:'Match Manager'},
+      {init:'AM',av:'av-purple',name:'Amy M',role:'URC Tournament'},
+      {init:'DE',av:'av-amber',name:'Debbie E',role:'URC Tournament'},
+    ],
+    launch:'In progress — MD Docs to build',
+    prompt:'Tell me more about the Match Management module in the URC Ops platform'
+  },
+  {
+    id:'broadcast',name:'Broadcast',icon:'ti-device-tv',iconCls:'mc-icon-amber',status:'planned',
+    desc:'Broadcaster contacts, on-air timings, camera setup, Hawk-Eye and ref comms',
+    tags:['HB contacts','On-air timings','Camera plan','Hawk-Eye','Ref comms'],
+    features:['Host broadcaster contacts per fixture','On-air / off-air times','Camera plan and setup','Hawk-Eye / Mobii sync confirmation','Ref comms confirmation','Sound check timings','Premier Sports & Supersport contacts'],
+    users:[
+      {init:'CB',av:'av-blue',name:'Chris B',role:'URC Broadcast Manager'},
+      {init:'MR',av:'av-teal',name:'Mali R',role:'HB Producer'},
+      {init:'RJ',av:'av-amber',name:'Rhydian J',role:'HB Floor Manager'},
+      {init:'GH',av:'av-purple',name:'Gethin H',role:'HB Director'},
+    ],
+    launch:'Planned — Sep 2026',
+    prompt:'Tell me more about the Broadcast module in the URC Ops platform'
+  },
+  {
+    id:'teams',name:'Teams & clubs',icon:'ti-shirt',iconCls:'mc-icon-purple',status:'planned',
+    desc:'Club contacts, team managers, media managers and doctors per fixture',
+    tags:['Team managers','Media contacts','Team doctors','Team sheets'],
+    features:['Home & away team contacts per fixture','Team manager, media, doctor details','Team sheet submission (1hr before KO)','Club operations contacts','Auto-populated from club database','Per-fixture contact directory'],
+    users:[
+      {init:'HA',av:'av-teal',name:'Harrison A',role:'Ospreys Media'},
+      {init:'DD',av:'av-blue',name:'Dai D',role:'Ospreys Team Manager'},
+      {init:'RL',av:'av-amber',name:'Rob L',role:'Scarlets Media'},
+      {init:'JD',av:'av-purple',name:'James D',role:'Scarlets Team Manager'},
+    ],
+    launch:'Planned — Sep 2026',
+    prompt:'Tell me more about the Teams & Clubs module in the URC Ops platform'
+  },
+  {
+    id:'docs',name:'MD Docs',icon:'ti-file-description',iconCls:'mc-icon-green',status:'partial',
+    desc:'Digital Match Summary and Pre-Match Meeting Agenda — created, issued and tracked in platform',
+    tags:['Match Summary','Pre-match agenda','Templates','Issued to all','Read tracking'],
+    features:['Match Summary template (auto-fills officials, contacts)','Pre-Match Agenda template (timings, broadcast, interviews)','Issue to all stakeholders in one click','Read / unread tracking per recipient','Version history','Share in messaging or standalone','PDF export'],
+    users:[
+      {init:'PL',av:'av-blue',name:'Paul L',role:'Admin — creates'},
+      {init:'ER',av:'av-teal',name:'Elaine R',role:'Match Manager — fills agenda'},
+      {init:'FM',av:'av-teal',name:'Frank Murphy',role:'Referee — receives'},
+      {init:'MR',av:'av-amber',name:'Mali R',role:'HB Producer — receives'},
+    ],
+    launch:'Next to build',
+    prompt:'Lets build the MD Docs creator now'
+  },
+  {
+    id:'messaging',name:'Messaging',icon:'ti-message-2',iconCls:'mc-icon-pink',status:'built',
+    desc:'Match day groups, round groups, direct messages and document sharing — replacing WhatsApp',
+    tags:['Match day groups','Round groups','Direct messages','Doc sharing','Replaces WhatsApp'],
+    features:['Match day group auto-created per fixture','Round & role-specific groups','Direct messages between any users','Upload files or share from doc library','Link MD Docs directly into threads','Read receipts on shared documents','All stakeholders — officials to broadcasters'],
+    users:[
+      {init:'PL',av:'av-blue',name:'Paul L',role:'Admin'},
+      {init:'BO',av:'av-purple',name:"Ben O'K",role:'Referee'},
+      {init:'MR',av:'av-amber',name:'Mali R',role:'HB Producer'},
+      {init:'ER',av:'av-teal',name:'Elaine R',role:'Match Manager'},
+    ],
+    launch:'Built — demo ready',
+    prompt:'Tell me more about the Messaging module in the URC Ops platform'
+  },
+  {
+    id:'directory',name:'Stakeholder directory',icon:'ti-address-book',iconCls:'mc-icon-gray',status:'planned',
+    desc:'Every person who touches a URC fixture — contacts, roles, fixture assignments',
+    tags:['All contacts','Roles','Fixture assignments','Suppliers','Photographers'],
+    features:['Officials, match managers, broadcast contacts','Club team managers, media, doctors','Third party suppliers — Hawk-Eye, Evolve, SFMS','Official photographers per fixture','Citing commissioners','Auto-linked to fixture records','Searchable across all fixtures'],
+    users:[
+      {init:'PL',av:'av-blue',name:'Paul L',role:'Admin — manages'},
+      {init:'AM',av:'av-purple',name:'Amy M',role:'URC Tournament'},
+      {init:'IB',av:'av-teal',name:'India B',role:'Hawk-Eye'},
+      {init:'GN',av:'av-gray',name:'Geraint N',role:'Photographer'},
+    ],
+    launch:'Planned — Sep 2026',
+    prompt:'Tell me more about the Stakeholder Directory in the URC Ops platform'
+  },
+  {
+    id:'fixtures',name:'Fixtures & rounds',icon:'ti-calendar-event',iconCls:'mc-icon-red',status:'planned',
+    desc:'Full season schedule — 18 rounds, QFs, SFs and Grand Final — per-fixture dashboard',
+    tags:['Full schedule','Per-fixture dashboard','Round management','Knockouts'],
+    features:['All 18 regular rounds — 8 games per round','Quarter-final, semi-final, Grand Final','Per-fixture dashboard — all modules linked','Fixture status (appointed/vacant/sent)','Round-level overview for planning','Venue and broadcast details per fixture','Integration with all other modules'],
+    users:[
+      {init:'PL',av:'av-blue',name:'Paul L',role:'Admin'},
+      {init:'TH',av:'av-amber',name:'Tappe H',role:'Manager'},
+      {init:'CC',av:'av-green',name:'Charl C',role:'Senior Leadership'},
+    ],
+    launch:'Planned — Sep 2026',
+    prompt:'Tell me more about the Fixtures & Rounds module in the URC Ops platform'
+  },
+];
+
+const STATUS_LABELS={built:'Built ✓',partial:'In progress',planned:'Planned'};
+const STATUS_CLS={built:'mc-built',partial:'mc-partial',planned:'mc-planned'};
+
+function renderModules(){
+  document.getElementById('module-grid').innerHTML=MODULES.map((m,i)=>`
+    <div class="module-card" id="mc-${m.id}" onclick="showDetail('${m.id}')">
+      <div class="mc-icon ${m.iconCls}"><i class="ti ${m.icon}" aria-hidden="true"></i></div>
+      <div class="mc-name">${m.name}</div>
+      <div class="mc-desc">${m.desc}</div>
+      <div class="mc-tags">
+        <span class="${STATUS_CLS[m.status]}">${STATUS_LABELS[m.status]}</span>
+        ${m.tags.slice(0,2).map(t=>`<span class="mc-tag">${t}</span>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+function showDetail(id){
+  const m=MODULES.find(x=>x.id===id);
+  document.querySelectorAll('.module-card').forEach(c=>c.classList.remove('active'));
+  document.getElementById('mc-'+id).classList.add('active');
+  const panel=document.getElementById('detail-panel');
+  panel.classList.add('visible');
+  panel.innerHTML=`
+    <div class="dp-header">
+      <div class="dp-icon ${m.iconCls}"><i class="ti ${m.icon}" aria-hidden="true"></i></div>
+      <div>
+        <div class="dp-title">${m.name}</div>
+        <div class="dp-sub">${m.launch}</div>
+      </div>
+      <span class="${STATUS_CLS[m.status]}" style="margin-left:auto;font-size:10px;padding:3px 8px;border-radius:var(--border-radius-md)">${STATUS_LABELS[m.status]}</span>
+    </div>
+    <div class="dp-body">
+      <div>
+        <div class="dp-col-title">Features</div>
+        ${m.features.map(f=>`<div class="dp-feature"><i class="ti ti-check" aria-hidden="true"></i>${f}</div>`).join('')}
+      </div>
+      <div>
+        <div class="dp-col-title">Key users</div>
+        ${m.users.map(u=>`<div class="dp-user"><div class="dp-av ${u.av}">${u.init}</div><div><div class="dp-user-info">${u.name}</div><div class="dp-user-role">${u.role}</div></div></div>`).join('')}
+        <div style="margin-top:8px">
+          <div class="dp-col-title">All tags</div>
+          <div class="mc-tags" style="margin-top:6px">${m.tags.map(t=>`<span class="mc-tag">${t}</span>`).join('')}</div>
+        </div>
+      </div>
+      <div>
+        <div class="dp-col-title">Explore</div>
+        <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:10px;line-height:1.6">${m.desc}</div>
+        <button class="explore-btn explore-btn-primary" onclick="sendPrompt('${m.prompt}')">Explore this module ↗</button>
+        <br>
+        <button class="explore-btn" style="margin-top:6px" onclick="closeDetail()">Close</button>
+      </div>
+    </div>`;
+  panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function closeDetail(){
+  document.getElementById('detail-panel').classList.remove('visible');
+  document.querySelectorAll('.module-card').forEach(c=>c.classList.remove('active'));
+}
+
+renderModules();
+</script>

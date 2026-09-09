@@ -1,0 +1,429 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);font-size:13px;color:var(--color-text-primary)}
+.app{display:flex;flex-direction:column;height:720px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;background:var(--color-background-primary)}
+.topbar{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:0.5px solid var(--color-border-tertiary);flex-shrink:0;flex-wrap:wrap;background:var(--color-background-secondary)}
+.tb-title{font-size:14px;font-weight:500;margin-right:4px}
+.tb-sep{color:var(--color-border-secondary);font-size:16px}
+.ctrl-label{font-size:10px;color:var(--color-text-tertiary);margin-right:4px}
+.ctrl-select{font-size:11px;padding:4px 6px;border-radius:var(--border-radius-md)}
+.filter-group{display:flex;gap:4px;margin-left:4px}
+.fb{font-size:10px;padding:3px 9px;border-radius:var(--border-radius-md);cursor:pointer;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-secondary)}
+.fb.on{background:#185FA5;color:#E6F1FB;border-color:#185FA5}
+.btn{font-size:11px;padding:5px 11px;border-radius:var(--border-radius-md);cursor:pointer;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary)}
+.btn:hover{background:var(--color-background-secondary)}
+.btn-primary{background:#185FA5;color:#E6F1FB;border-color:#185FA5}
+.btn-primary:hover{background:#0C447C}
+.legend{display:flex;gap:12px;margin-left:auto;align-items:center}
+.leg{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--color-text-secondary)}
+.leg-swatch{width:12px;height:12px;border-radius:2px;flex-shrink:0}
+.body{display:flex;flex:1;overflow:hidden}
+.left-col{width:180px;flex-shrink:0;border-right:0.5px solid var(--color-border-tertiary);overflow-y:auto;background:var(--color-background-secondary)}
+.role-group{border-bottom:0.5px solid var(--color-border-tertiary)}
+.rg-header{padding:6px 10px;font-size:9px;font-weight:500;text-transform:uppercase;letter-spacing:0.05em;color:var(--color-text-tertiary);background:var(--color-background-secondary);position:sticky;top:0;z-index:1}
+.official-row{display:flex;align-items:center;gap:7px;padding:5px 10px;border-bottom:0.5px solid var(--color-border-tertiary);cursor:pointer;transition:background 0.1s;min-height:36px}
+.official-row:hover{background:var(--color-background-primary)}
+.official-row.selected{background:#E6F1FB}
+.or-avatar{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:500;flex-shrink:0}
+.av-blue{background:#B5D4F4;color:#0C447C}
+.av-teal{background:#9FE1CB;color:#085041}
+.av-amber{background:#FAC775;color:#633806}
+.av-pink{background:#F4C0D1;color:#4B1528}
+.av-purple{background:#CECBF6;color:#26215C}
+.or-info{flex:1;min-width:0}
+.or-name{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.or-role{font-size:9px;color:var(--color-text-tertiary)}
+.union-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.ud-sco{background:#7F77DD}.ud-ita{background:#378ADD}.ud-wal{background:#D4537E}.ud-irl{background:#1D9E75}.ud-rsa{background:#BA7517}.ud-neu{background:#888780}
+.grid-area{flex:1;overflow:auto;position:relative}
+.grid-wrap{min-width:max-content}
+.grid-header{display:flex;position:sticky;top:0;z-index:5;background:var(--color-background-primary);border-bottom:0.5px solid var(--color-border-tertiary)}
+.gh-spacer{width:0;flex-shrink:0}
+.date-col{width:38px;flex-shrink:0;text-align:center;padding:4px 2px;border-right:0.5px solid var(--color-border-tertiary)}
+.date-col.weekend{background:var(--color-background-secondary)}
+.date-col.fixture-day{background:#E6F1FB}
+.date-day{font-size:9px;color:var(--color-text-tertiary)}
+.date-num{font-size:12px;font-weight:500}
+.date-fix{font-size:8px;color:#185FA5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:36px}
+.data-row{display:flex;border-bottom:0.5px solid var(--color-border-tertiary);min-height:36px}
+.data-row.group-top{border-top:1.5px solid var(--color-border-secondary)}
+.cell{width:38px;flex-shrink:0;border-right:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:opacity 0.1s;position:relative}
+.cell:hover{opacity:0.8}
+.c-avail{background:#EAF3DE}
+.c-unavail{background:#FCEBEB}
+.c-fixture{background:#E6F1FB}
+.c-empty{background:var(--color-background-primary)}
+.c-weekend{background:var(--color-background-secondary)}
+.cell-inner{width:28px;height:20px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:500}
+.ci-avail{background:#C0DD97;color:#27500A}
+.ci-unavail{background:#F09595;color:#791F1F}
+.ci-fixture{background:#85B7EB;color:#0C447C}
+.ci-empty{background:transparent}
+.summary-bar{flex-shrink:0;border-top:0.5px solid var(--color-border-tertiary);padding:10px 16px;background:var(--color-background-secondary);display:flex;gap:16px;align-items:center}
+.sum-stat{display:flex;flex-direction:column;align-items:center;gap:1px}
+.sum-val{font-size:18px;font-weight:500}
+.sum-label{font-size:9px;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.04em}
+.sum-div{width:0.5px;height:32px;background:var(--color-border-tertiary)}
+.tooltip{position:fixed;background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:6px 10px;font-size:11px;pointer-events:none;z-index:100;box-shadow:none;display:none;max-width:180px}
+.fix-chip{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:var(--border-radius-md);font-size:10px;background:#E6F1FB;color:#0C447C;border:0.5px solid #85B7EB;margin:2px}
+.detail-panel{width:200px;flex-shrink:0;border-left:0.5px solid var(--color-border-tertiary);overflow-y:auto;background:var(--color-background-secondary);padding:10px}
+.dp-title{font-size:11px;font-weight:500;margin-bottom:8px;color:var(--color-text-secondary)}
+.dp-name{font-size:13px;font-weight:500;margin-bottom:2px}
+.dp-role{font-size:10px;color:var(--color-text-tertiary);margin-bottom:8px}
+.dp-stat-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:0.5px solid var(--color-border-tertiary);font-size:11px}
+.dp-stat-label{color:var(--color-text-tertiary)}
+.dp-fix-list{display:flex;flex-direction:column;gap:4px;margin-top:8px}
+.dp-fix{padding:5px 7px;border-radius:var(--border-radius-md);border:0.5px solid #85B7EB;background:#E6F1FB;font-size:10px}
+.dp-empty{font-size:11px;color:var(--color-text-tertiary);text-align:center;padding:20px 0}
+</style>
+
+<h2 class="sr-only">URC Availability Fleet View — pre-panel planning tool</h2>
+
+<div class="app">
+<div class="topbar">
+  <span class="tb-title">Fleet availability</span>
+  <span class="tb-sep">·</span>
+  <span class="ctrl-label">Round</span>
+  <select class="ctrl-select" id="round-sel" onchange="onRoundChange()">
+    <option value="19">Round 19 — 16–18 May</option>
+    <option value="20">Round 20 — 23–25 May</option>
+    <option value="21">Round 21 — 30 May – 1 Jun</option>
+  </select>
+  <span class="ctrl-label" style="margin-left:8px">Union</span>
+  <select class="ctrl-select" id="union-sel" onchange="render()">
+    <option value="all">All unions</option>
+    <option value="SCO">Scotland</option>
+    <option value="IRL">Ireland</option>
+    <option value="WAL">Wales</option>
+    <option value="RSA">South Africa</option>
+    <option value="ITA">Italy</option>
+    <option value="NEU">Neutral / Overseas</option>
+  </select>
+  <div class="filter-group">
+    <button class="fb on" id="fb-all" onclick="setRoleFilter('all',this)">All roles</button>
+    <button class="fb" id="fb-ref" onclick="setRoleFilter('ref',this)">Referee</button>
+    <button class="fb" id="fb-ar" onclick="setRoleFilter('ar',this)">AR</button>
+    <button class="fb" id="fb-tmo" onclick="setRoleFilter('tmo',this)">TMO</button>
+    <button class="fb" id="fb-ops" onclick="setRoleFilter('ops',this)">Ops</button>
+  </div>
+  <div class="legend">
+    <div class="leg"><div class="leg-swatch" style="background:#C0DD97"></div>Available</div>
+    <div class="leg"><div class="leg-swatch" style="background:#F09595"></div>Unavailable</div>
+    <div class="leg"><div class="leg-swatch" style="background:#85B7EB"></div>Fixture</div>
+    <div class="leg"><div class="leg-swatch" style="background:var(--color-background-secondary)"></div>Weekend</div>
+  </div>
+</div>
+
+<div class="body">
+  <div class="left-col" id="left-col"></div>
+  <div class="grid-area" id="grid-area">
+    <div class="grid-wrap" id="grid-wrap"></div>
+  </div>
+  <div class="detail-panel" id="detail-panel">
+    <div class="dp-title">Official detail</div>
+    <div class="dp-empty">Click an official to see their availability summary</div>
+  </div>
+</div>
+
+<div class="summary-bar" id="summary-bar"></div>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+const ROUNDS={
+  19:{label:'Round 19',start:new Date(2026,4,11),days:8,fixtures:[
+    {day:2,label:'Scarlets v Cardiff',home:'WAL'},{day:3,label:'Glasgow v Edinburgh',home:'SCO'},{day:3,label:'Leinster v Ulster',home:'IRL'},
+    {day:3,label:'Bulls v Stormers',home:'RSA'},{day:4,label:'Lions v Sharks',home:'RSA'},{day:4,label:'Munster v Connacht',home:'IRL'},
+    {day:4,label:'Ospreys v Dragons',home:'WAL'},{day:4,label:'Benetton v Zebre',home:'ITA'}
+  ]},
+  20:{label:'Round 20',start:new Date(2026,4,18),days:8,fixtures:[
+    {day:2,label:'Edinburgh v Glasgow',home:'SCO'},{day:3,label:'Ulster v Leinster',home:'IRL'},{day:3,label:'Stormers v Bulls',home:'RSA'},
+    {day:3,label:'Ospreys v Cardiff',home:'WAL'},{day:4,label:'Sharks v Lions',home:'RSA'},{day:4,label:'Connacht v Munster',home:'IRL'},
+    {day:4,label:'Dragons v Scarlets',home:'WAL'},{day:4,label:'Zebre v Benetton',home:'ITA'}
+  ]},
+  21:{label:'Round 21',start:new Date(2026,4,25),days:8,fixtures:[
+    {day:2,label:'Cardiff v Scarlets',home:'WAL'},{day:3,label:'Glasgow v Leinster',home:'SCO'},{day:3,label:'Lions v Bulls',home:'RSA'},
+    {day:3,label:'Edinburgh v Munster',home:'SCO'},{day:4,label:'Stormers v Sharks',home:'RSA'},{day:4,label:'Ulster v Connacht',home:'IRL'},
+    {day:4,label:'Benetton v Ospreys',home:'ITA'},{day:4,label:'Zebre v Dragons',home:'ITA'}
+  ]},
+};
+
+const UNION_DOT={SCO:'ud-sco',ITA:'ud-ita',WAL:'ud-wal',IRL:'ud-irl',RSA:'ud-rsa',NEU:'ud-neu',NZL:'ud-neu',ENG:'ud-neu',FRA:'ud-neu',GEO:'ud-neu'};
+const UNION_NAME={SCO:'Scotland',ITA:'Italy',WAL:'Wales',IRL:'Ireland',RSA:'South Africa',NZL:'New Zealand',ENG:'England',FRA:'France',GEO:'Georgia',NEU:'Neutral'};
+const AV_COLS={SCO:'av-purple',ITA:'av-blue',WAL:'av-pink',IRL:'av-teal',RSA:'av-amber',NZL:'av-blue',ENG:'av-blue',FRA:'av-blue',GEO:'av-blue'};
+
+const DAYS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+// Officials pool
+const OFFICIALS=[
+  // Referees
+  {id:'fm',name:'Frank Murphy',init:'FM',union:'IRL',roleGroup:'ref',roleLabel:'Referee'},
+  {id:'bok',name:"Ben O'Keeffe",init:'BO',union:'NZL',roleGroup:'ref',roleLabel:'Referee'},
+  {id:'na',name:'Nika Amashukeli',init:'NA',union:'GEO',roleGroup:'ref',roleLabel:'Referee'},
+  {id:'mc',name:'Matthew Carley',init:'MC',union:'ENG',roleGroup:'ref',roleLabel:'Referee'},
+  {id:'wb',name:'Wayne Barnes',init:'WB',union:'ENG',roleGroup:'ref',roleLabel:'Referee'},
+  {id:'rp',name:'Romain Poite',init:'RP',union:'FRA',roleGroup:'ref',roleLabel:'Referee'},
+  // ARs
+  {id:'ap',name:'Andrea Piardi',init:'AP',union:'ITA',roleGroup:'ar',roleLabel:'AR'},
+  {id:'cr',name:'C. Ridley',init:'CR',union:'ENG',roleGroup:'ar',roleLabel:'AR'},
+  {id:'ma',name:'Mike Adamson',init:'MA',union:'SCO',roleGroup:'ar',roleLabel:'AR'},
+  {id:'ph',name:'Peter Haycock',init:'PH',union:'IRL',roleGroup:'ar',roleLabel:'AR'},
+  {id:'sw',name:'Sara Walker',init:'SW',union:'WAL',roleGroup:'ar',roleLabel:'AR'},
+  {id:'lm',name:'Lourens Munro',init:'LM',union:'RSA',roleGroup:'ar',roleLabel:'AR'},
+  {id:'si',name:'Sifiso Sithole',init:'SS',union:'RSA',roleGroup:'ar',roleLabel:'AR'},
+  {id:'as2',name:'Alasdair Stewart',init:'AS',union:'SCO',roleGroup:'ar',roleLabel:'AR'},
+  {id:'ec',name:'Eoghan Crowley',init:'EC',union:'IRL',roleGroup:'ar',roleLabel:'AR'},
+  {id:'mw',name:'Matthew Willis',init:'MW',union:'WAL',roleGroup:'ar',roleLabel:'AR'},
+  // TMO
+  {id:'jn',name:'Joy Neville',init:'JN',union:'IRL',roleGroup:'tmo',roleLabel:'TMO'},
+  {id:'tj',name:'Ton Jonker',init:'TJ',union:'RSA',roleGroup:'tmo',roleLabel:'TMO'},
+  {id:'gn',name:'Glenn Newman',init:'GN',union:'NZL',roleGroup:'tmo',roleLabel:'TMO'},
+  {id:'fs',name:'Filippo Smacchia',init:'FS',union:'ITA',roleGroup:'tmo',roleLabel:'TMO'},
+  // Ops
+  {id:'mj',name:'Mark Jones',init:'MJ',union:'WAL',roleGroup:'ops',roleLabel:'TMO Op'},
+  {id:'dl',name:'David Lynch',init:'DL',union:'IRL',roleGroup:'ops',roleLabel:'TMO Op'},
+  {id:'nl',name:'Neil Louw',init:'NL',union:'RSA',roleGroup:'ops',roleLabel:'TMO Op'},
+  {id:'rm',name:'Ross McNeil',init:'RM',union:'SCO',roleGroup:'ops',roleLabel:'SLM'},
+  {id:'db',name:'Derek Brown',init:'DB',union:'SCO',roleGroup:'ops',roleLabel:'SLM'},
+  {id:'cv',name:'Carlo Visser',init:'CV',union:'RSA',roleGroup:'ops',roleLabel:'SLM'},
+  {id:'ew',name:'Elan Williams',init:'EW',union:'WAL',roleGroup:'ops',roleLabel:'SLM'},
+  {id:'rk',name:'Robert Kelly',init:'RK',union:'SCO',roleGroup:'ops',roleLabel:'TK'},
+  {id:'jp',name:'Jan Pretorius',init:'JP',union:'RSA',roleGroup:'ops',roleLabel:'TK'},
+  {id:'ao',name:"Aoife O'Brien",init:'AO',union:'IRL',roleGroup:'ops',roleLabel:'TK'},
+  {id:'gg',name:'G. Gnecchi',init:'GG',union:'ITA',roleGroup:'ops',roleLabel:'Citing'},
+  {id:'pf',name:'Pieter Ferreira',init:'PF',union:'RSA',roleGroup:'ops',roleLabel:'Citing'},
+  {id:'eb',name:'Euan Black',init:'EB',union:'SCO',roleGroup:'ops',roleLabel:'Citing'},
+];
+
+// Seeded deterministic availability
+function seed(id,day){let h=0;for(let c of id+day)h=(h*31+c.charCodeAt(0))&0xffff;return h;}
+function getAvail(official,dayIdx,round){
+  const r=ROUNDS[round];
+  const fx=r.fixtures.filter(f=>f.day===dayIdx);
+  // check if appointed to fixture
+  const appointed=(official.id==='fm'&&dayIdx===3&&round===19)||(official.id==='tj'&&dayIdx===4&&round===19)||(official.id==='wb'&&dayIdx===2&&round===19);
+  if(appointed)return'fixture';
+  // weekends (dayIdx 5=Sat, 6=Sun) - higher avail
+  const isWeekend=dayIdx===5||dayIdx===6||dayIdx===1||dayIdx===2||dayIdx===3||dayIdx===4;
+  const s=seed(official.id,dayIdx*100+round);
+  if(official.id==='wb'&&dayIdx>=2&&dayIdx<=5&&round===19)return'unavail';
+  if(official.id==='sw'&&dayIdx>=1&&dayIdx<=4&&round===19)return'unavail';
+  if(official.id==='bm'&&round===19)return'unavail';
+  if(s%10<2)return'unavail';
+  if(s%10<3&&dayIdx===0)return'unavail';
+  return'avail';
+}
+
+// fixture days for a round (0-indexed day of that week window)
+function getFixtureDays(round){
+  return new Set(ROUNDS[round].fixtures.map(f=>f.day));
+}
+
+let currentRound=19;
+let roleFilter='all';
+let selectedOfficial=null;
+let selectedCell=null;
+
+function onRoundChange(){
+  currentRound=parseInt(document.getElementById('round-sel').value);
+  selectedOfficial=null;
+  render();
+}
+function setRoleFilter(f,el){
+  roleFilter=f;
+  document.querySelectorAll('.fb').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');
+  render();
+}
+
+function getFilteredOfficials(){
+  const unionFilter=document.getElementById('union-sel').value;
+  return OFFICIALS.filter(o=>{
+    if(roleFilter!=='all'&&o.roleGroup!==roleFilter)return false;
+    if(unionFilter==='NEU'&&['SCO','IRL','WAL','RSA','ITA'].includes(o.union))return false;
+    if(unionFilter!=='all'&&unionFilter!=='NEU'&&o.union!==unionFilter)return false;
+    return true;
+  });
+}
+
+function render(){
+  const officials=getFilteredOfficials();
+  const round=currentRound;
+  const rData=ROUNDS[round];
+  const numDays=rData.days+2; // show 2 days before round weekend too
+  const fixDays=getFixtureDays(round);
+
+  // LEFT COL
+  const groups=[
+    {label:'Referees',key:'ref'},
+    {label:'Assistant Referees',key:'ar'},
+    {label:'TMO',key:'tmo'},
+    {label:'Operations',key:'ops'},
+  ];
+  let leftHtml='';
+  groups.forEach(g=>{
+    const offs=officials.filter(o=>o.roleGroup===g.key);
+    if(!offs.length)return;
+    leftHtml+=`<div class="role-group"><div class="rg-header">${g.label}</div>`;
+    offs.forEach(o=>{
+      const dotCls=UNION_DOT[o.union]||'ud-neu';
+      const avCls=AV_COLS[o.union]||'av-blue';
+      leftHtml+=`<div class="official-row ${selectedOfficial===o.id?'selected':''}" onclick="selectOfficial('${o.id}')">
+        <div class="or-avatar ${avCls}">${o.init}</div>
+        <div class="or-info"><div class="or-name">${o.name}</div><div class="or-role">${o.roleLabel} · ${UNION_NAME[o.union]||o.union}</div></div>
+        <div class="union-dot ${dotCls}"></div>
+      </div>`;
+    });
+    leftHtml+='</div>';
+  });
+  document.getElementById('left-col').innerHTML=leftHtml;
+
+  // GRID HEADER
+  const start=rData.start;
+  let headerHtml='<div class="grid-header">';
+  for(let d=0;d<numDays;d++){
+    const date=new Date(start);date.setDate(start.getDate()+d);
+    const dayName=DAYS[date.getDay()===0?6:date.getDay()-1];
+    const isWeekend=date.getDay()===0||date.getDay()===6;
+    const isFixDay=fixDays.has(d);
+    const fixLabel=isFixDay?rData.fixtures.filter(f=>f.day===d).length+'fix':'';
+    headerHtml+=`<div class="date-col ${isWeekend?'weekend':''} ${isFixDay?'fixture-day':''}">
+      <div class="date-day">${dayName}</div>
+      <div class="date-num">${date.getDate()}</div>
+      ${isFixDay?`<div class="date-fix">${rData.fixtures.filter(f=>f.day===d).length} fix</div>`:''}
+    </div>`;
+  }
+  headerHtml+='</div>';
+
+  // DATA ROWS
+  let dataHtml='';
+  let groupBoundaries=new Set();
+  let groupStart=0;
+  groups.forEach(g=>{
+    const offs=officials.filter(o=>o.roleGroup===g.key);
+    if(offs.length)groupBoundaries.add(groupStart);
+    groupStart+=offs.length;
+  });
+
+  let rowIdx=0;
+  groups.forEach(g=>{
+    const offs=officials.filter(o=>o.roleGroup===g.key);
+    offs.forEach((o,i)=>{
+      const isTop=i===0;
+      dataHtml+=`<div class="data-row ${isTop?'group-top':''}">`;
+      for(let d=0;d<numDays;d++){
+        const av=getAvail(o,d,round);
+        const date=new Date(start);date.setDate(start.getDate()+d);
+        const isWeekend=date.getDay()===0||date.getDay()===6;
+        let cellCls='c-empty',innerCls='ci-empty',innerTxt='';
+        if(av==='avail'){cellCls='c-avail';innerCls='ci-avail';innerTxt='✓';}
+        else if(av==='unavail'){cellCls='c-unavail';innerCls='ci-unavail';innerTxt='✕';}
+        else if(av==='fixture'){cellCls='c-fixture';innerCls='ci-fixture';innerTxt='F';}
+        if(isWeekend&&av==='c-empty')cellCls='c-weekend';
+        const fixHere=rData.fixtures.filter(f=>f.day===d);
+        const fixLabel=fixHere.length?fixHere.map(f=>f.label).join(', '):'';
+        dataHtml+=`<div class="cell ${cellCls}" 
+          onmouseenter="showTooltip(event,'${o.name}','${DAYS[date.getDay()===0?6:date.getDay()-1]} ${date.getDate()} May','${av}','${fixLabel}')"
+          onmouseleave="hideTooltip()"
+          onclick="cellClick('${o.id}',${d},'${av}')">
+          <div class="cell-inner ${innerCls}">${innerTxt}</div>
+        </div>`;
+      }
+      dataHtml+='</div>';
+      rowIdx++;
+    });
+  });
+
+  document.getElementById('grid-wrap').innerHTML=headerHtml+dataHtml;
+
+  // SUMMARY BAR
+  renderSummary(officials,round,numDays);
+
+  // DETAIL PANEL
+  if(selectedOfficial){
+    renderDetail(selectedOfficial,round,numDays);
+  }
+}
+
+function renderSummary(officials,round,numDays){
+  const rData=ROUNDS[round];
+  let totalAvail=0,totalUnavail=0,totalFixture=0,totalCells=0;
+  officials.forEach(o=>{
+    for(let d=0;d<numDays;d++){
+      const av=getAvail(o,d,round);
+      if(av==='avail')totalAvail++;
+      else if(av==='unavail')totalUnavail++;
+      else if(av==='fixture')totalFixture++;
+      totalCells++;
+    }
+  });
+  const availPct=totalCells?Math.round(totalAvail/totalCells*100):0;
+  const refAvail=officials.filter(o=>o.roleGroup==='ref').filter(o=>{
+    let a=0;for(let d=0;d<numDays;d++){if(getAvail(o,d,round)==='avail')a++;}return a>0;
+  }).length;
+  const refTotal=officials.filter(o=>o.roleGroup==='ref').length;
+  document.getElementById('summary-bar').innerHTML=`
+    <div class="sum-stat"><div class="sum-val" style="color:#3B6D11">${totalAvail}</div><div class="sum-label">Available slots</div></div>
+    <div class="sum-div"></div>
+    <div class="sum-stat"><div class="sum-val" style="color:#A32D2D">${totalUnavail}</div><div class="sum-label">Unavailable</div></div>
+    <div class="sum-div"></div>
+    <div class="sum-stat"><div class="sum-val" style="color:#185FA5">${totalFixture}</div><div class="sum-label">On fixture</div></div>
+    <div class="sum-div"></div>
+    <div class="sum-stat"><div class="sum-val">${availPct}%</div><div class="sum-label">Avail rate</div></div>
+    <div class="sum-div"></div>
+    <div class="sum-stat"><div class="sum-val" style="color:#3B6D11">${refAvail}<span style="font-size:12px;color:var(--color-text-tertiary)">/${refTotal}</span></div><div class="sum-label">Referees avail</div></div>
+    <div class="sum-div"></div>
+    <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">
+      ${rData.fixtures.map(f=>`<span class="fix-chip"><i class="ti ti-ball-football" style="font-size:10px" aria-hidden="true"></i>${f.label}</span>`).join('')}
+    </div>`;
+}
+
+function selectOfficial(id){
+  selectedOfficial=selectedOfficial===id?null:id;
+  render();
+}
+
+function renderDetail(id,round,numDays){
+  const o=OFFICIALS.find(x=>x.id===id);
+  if(!o){document.getElementById('detail-panel').innerHTML='<div class="dp-title">Official detail</div><div class="dp-empty">Click an official to see their availability summary</div>';return;}
+  const rData=ROUNDS[round];
+  let avail=0,unavail=0,fixtures=[];
+  for(let d=0;d<numDays;d++){
+    const av=getAvail(o,d,round);
+    if(av==='avail')avail++;
+    else if(av==='unavail')unavail++;
+    else if(av==='fixture'){avail++;fixtures.push(rData.fixtures.filter(f=>f.day===d).map(f=>f.label).join(', '));}
+  }
+  const avCls=AV_COLS[o.union]||'av-blue';
+  const dotCls=UNION_DOT[o.union]||'ud-neu';
+  document.getElementById('detail-panel').innerHTML=`
+    <div class="dp-title">Official detail</div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <div class="or-avatar ${avCls}" style="width:32px;height:32px;font-size:11px">${o.init}</div>
+      <div><div class="dp-name">${o.name}</div><div class="dp-role">${o.roleLabel} · ${UNION_NAME[o.union]||o.union}</div></div>
+    </div>
+    <div class="dp-stat-row"><span class="dp-stat-label">Available days</span><span style="color:#3B6D11;font-weight:500">${avail}</span></div>
+    <div class="dp-stat-row"><span class="dp-stat-label">Unavailable days</span><span style="color:#A32D2D;font-weight:500">${unavail}</span></div>
+    <div class="dp-stat-row"><span class="dp-stat-label">Avail rate</span><span style="font-weight:500">${Math.round(avail/numDays*100)}%</span></div>
+    <div class="dp-stat-row"><span class="dp-stat-label">Fixtures</span><span style="color:#185FA5;font-weight:500">${fixtures.length}</span></div>
+    ${fixtures.length?`<div style="font-size:10px;color:var(--color-text-tertiary);margin:8px 0 4px">Appointed to</div><div class="dp-fix-list">${fixtures.map(f=>`<div class="dp-fix">${f}</div>`).join('')}</div>`:''}
+    <div style="margin-top:12px">
+      <button class="btn btn-primary" style="width:100%;font-size:10px" onclick="sendPrompt('Start building a panel using ${o.name} as the starting point for Round ${round}')">Build panel with this official ↗</button>
+    </div>`;
+}
+
+function showTooltip(e,name,date,av,fix){
+  const t=document.getElementById('tooltip');
+  const avLabel={avail:'Available',unavail:'Unavailable',fixture:'On fixture'}[av]||av;
+  t.innerHTML=`<strong>${name}</strong><br>${date}<br><span style="color:${av==='avail'?'#3B6D11':av==='unavail'?'#A32D2D':'#185FA5'}">${avLabel}</span>${fix?`<br><span style="color:var(--color-text-tertiary);font-size:10px">${fix}</span>`:''}`;
+  t.style.display='block';
+  t.style.left=(e.clientX+12)+'px';
+  t.style.top=(e.clientY-10)+'px';
+}
+function hideTooltip(){document.getElementById('tooltip').style.display='none';}
+function cellClick(id,day,av){selectOfficial(id);}
+
+render();
+</script>

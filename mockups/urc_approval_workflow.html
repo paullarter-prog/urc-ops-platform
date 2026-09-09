@@ -1,0 +1,390 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);font-size:14px;color:var(--color-text-primary)}
+.app{display:flex;height:720px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;background:var(--color-background-primary)}
+.sidebar{width:220px;flex-shrink:0;border-right:0.5px solid var(--color-border-tertiary);display:flex;flex-direction:column;background:var(--color-background-secondary)}
+.sb-header{padding:12px 14px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-primary)}
+.sb-title{font-size:13px;font-weight:500}
+.sb-sub{font-size:10px;color:var(--color-text-tertiary);margin-top:2px}
+.sb-list{flex:1;overflow-y:auto;padding:8px}
+.sb-item{padding:8px 10px;border-radius:var(--border-radius-md);cursor:pointer;margin-bottom:4px;border:0.5px solid transparent}
+.sb-item:hover{background:var(--color-background-primary);border-color:var(--color-border-tertiary)}
+.sb-item.active{background:var(--color-background-primary);border-color:#85B7EB}
+.sb-fix{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-meta{font-size:10px;color:var(--color-text-tertiary);margin-top:2px}
+.sb-status{display:flex;align-items:center;gap:5px;margin-top:4px}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.dot-draft{background:#888780}
+.dot-review{background:#BA7517}
+.dot-approved{background:#3B6D11}
+.dot-rejected{background:#A32D2D}
+.dot-sent{background:#185FA5}
+.sb-status-label{font-size:10px}
+.col-draft{color:#5F5E5A}.col-review{color:#BA7517}.col-approved{color:#3B6D11}.col-rejected{color:#A32D2D}.col-sent{color:#185FA5}
+.main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+.topbar{padding:10px 18px;border-bottom:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.topbar-left{display:flex;flex-direction:column;gap:2px}
+.topbar-title{font-size:14px;font-weight:500}
+.topbar-sub{font-size:10px;color:var(--color-text-tertiary)}
+.topbar-actions{display:flex;gap:6px}
+.btn{font-size:11px;padding:6px 12px;border-radius:var(--border-radius-md);cursor:pointer;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary)}
+.btn:hover{background:var(--color-background-secondary)}
+.btn-primary{background:#185FA5;color:#E6F1FB;border-color:#185FA5}
+.btn-primary:hover{background:#0C447C}
+.btn-success{background:#3B6D11;color:#EAF3DE;border-color:#3B6D11}
+.btn-success:hover{background:#27500A}
+.btn-danger{background:#A32D2D;color:#FCEBEB;border-color:#A32D2D}
+.btn-danger:hover{background:#791F1F}
+.btn-warn{background:#BA7517;color:#FAEEDA;border-color:#BA7517}
+.content{flex:1;overflow-y:auto;padding:16px 18px}
+.workflow-track{display:flex;align-items:flex-start;gap:0;margin-bottom:20px;position:relative}
+.wf-step{display:flex;flex-direction:column;align-items:center;flex:1;position:relative}
+.wf-step:not(:last-child)::after{content:'';position:absolute;top:14px;left:50%;width:100%;height:1px;background:var(--color-border-tertiary);z-index:0}
+.wf-step.done::after{background:#3B6D11}
+.wf-step.active-step::after{background:#BA7517}
+.wf-node{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;z-index:1;border:1.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);color:var(--color-text-tertiary)}
+.wf-node.done{background:#EAF3DE;border-color:#639922;color:#27500A}
+.wf-node.active-step{background:#FAEEDA;border-color:#BA7517;color:#633806}
+.wf-node.rejected{background:#FCEBEB;border-color:#E24B4A;color:#791F1F}
+.wf-node.complete{background:#EAF3DE;border-color:#639922;color:#27500A}
+.wf-label{font-size:9px;color:var(--color-text-tertiary);margin-top:5px;text-align:center;width:70px}
+.wf-label.done{color:#3B6D11;font-weight:500}
+.wf-label.active-step{color:#BA7517;font-weight:500}
+.wf-label.rejected{color:#A32D2D;font-weight:500}
+.section{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px;margin-bottom:12px}
+.section-title{font-size:11px;font-weight:500;color:var(--color-text-secondary);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+.panel-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.panel-row{display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary);font-size:11px}
+.panel-row.filled{background:#EAF3DE;border-color:#C0DD97}
+.pr-role{color:var(--color-text-tertiary);font-size:10px;width:90px;flex-shrink:0}
+.pr-name{font-weight:500;flex:1}
+.pr-rule{font-size:9px;padding:1px 5px;border-radius:3px}
+.rule-n{background:#E6F1FB;color:#0C447C}
+.rule-h{background:#EAF3DE;color:#27500A}
+.timeline{display:flex;flex-direction:column;gap:8px}
+.tl-item{display:flex;gap:10px;align-items:flex-start}
+.tl-dot{width:8px;height:8px;border-radius:50%;margin-top:4px;flex-shrink:0}
+.tl-dot-done{background:#3B6D11}
+.tl-dot-active{background:#BA7517}
+.tl-dot-future{background:var(--color-border-secondary)}
+.tl-body{flex:1}
+.tl-label{font-size:12px;font-weight:500}
+.tl-meta{font-size:10px;color:var(--color-text-tertiary);margin-top:1px}
+.tl-note{font-size:11px;color:var(--color-text-secondary);margin-top:4px;padding:6px 8px;background:var(--color-background-secondary);border-radius:var(--border-radius-md)}
+.notif-list{display:flex;flex-direction:column;gap:6px}
+.notif{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary);font-size:11px}
+.notif i{font-size:15px;flex-shrink:0;margin-top:1px}
+.notif-info{border-color:#85B7EB;background:#E6F1FB;color:#042C53}
+.notif-warn{border-color:#FAC775;background:#FAEEDA;color:#412402}
+.notif-success{border-color:#C0DD97;background:#EAF3DE;color:#173404}
+.notif-err{border-color:#F09595;background:#FCEBEB;color:#501313}
+.comment-box{width:100%;font-size:12px;padding:8px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-secondary);resize:vertical;min-height:60px;color:var(--color-text-primary);font-family:var(--font-sans)}
+.action-row{display:flex;gap:6px;margin-top:8px;justify-content:flex-end}
+.badge{font-size:9px;padding:2px 7px;border-radius:var(--border-radius-md)}
+.b-draft{background:var(--color-background-secondary);color:var(--color-text-secondary);border:0.5px solid var(--color-border-tertiary)}
+.b-review{background:#FAEEDA;color:#633806}
+.b-approved{background:#EAF3DE;color:#27500A}
+.b-rejected{background:#FCEBEB;color:#791F1F}
+.b-sent{background:#E6F1FB;color:#0C447C}
+.flag-sco{background:#EEEDFE;color:#3C3489}
+.flag-ita{background:#E6F1FB;color:#0C447C}
+.flag-wal{background:#FCEBEB;color:#791F1F}
+.flag-irl{background:#EAF3DE;color:#085041}
+.flag-rsa{background:#FAEEDA;color:#633806}
+.flag-neu{background:var(--color-background-secondary);color:var(--color-text-secondary);border:0.5px solid var(--color-border-tertiary)}
+.union-tag{font-size:9px;padding:1px 5px;border-radius:3px;font-weight:500}
+</style>
+
+<h2 class="sr-only">URC Panel Approval Workflow</h2>
+
+<div class="app">
+<div class="sidebar">
+  <div class="sb-header">
+    <div class="sb-title">Approval queue</div>
+    <div class="sb-sub">Round 19 — 8 fixtures</div>
+  </div>
+  <div class="sb-list" id="sb-list"></div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title" id="top-title">—</div>
+      <div class="topbar-sub" id="top-sub">—</div>
+    </div>
+    <div class="topbar-actions" id="top-actions"></div>
+  </div>
+  <div class="content" id="main-content"></div>
+</div>
+</div>
+
+<script>
+const FIXTURES=[
+  {id:0,home:'Glasgow Warriors',away:'Edinburgh',venue:'Scotstoun, Glasgow',ko:'Sat 17 May · 15:15 BST',status:'review',submittedBy:'Paul L',submittedAt:'Today 09:14'},
+  {id:1,home:'Munster',away:'Connacht',venue:'Thomond Park',ko:'Sun 18 May · 14:00 GMT',status:'draft',submittedBy:null,submittedAt:null},
+  {id:2,home:'Cardiff',away:'Ospreys',venue:'Cardiff Arms Park',ko:'Sat 17 May · 15:00 GMT',status:'approved',submittedBy:'Paul L',submittedAt:'Yesterday 16:30'},
+  {id:3,home:'Lions',away:'Sharks',venue:'Ellis Park',ko:'Sun 18 May · 15:00 SAST',status:'sent',submittedBy:'Paul L',submittedAt:'Yesterday 11:00'},
+  {id:4,home:'Leinster',away:'Ulster',venue:'RDS Arena, Dublin',ko:'Sat 17 May · 15:00 GMT',status:'rejected',submittedBy:'Paul L',submittedAt:'Today 08:00'},
+  {id:5,home:'Scarlets',away:'Cardiff',venue:'Parc y Scarlets',ko:'Fri 16 May · 19:35 GMT',status:'sent',submittedBy:'Paul L',submittedAt:'2 days ago'},
+  {id:6,home:'Bulls',away:'Stormers',venue:'Loftus Versfeld',ko:'Sat 17 May · 15:00 SAST',status:'review',submittedBy:'Paul L',submittedAt:'Today 10:02'},
+  {id:7,home:'Benetton',away:'Zebre',venue:'Stadio Monigo',ko:'Sun 18 May · 16:00 CET',status:'draft',submittedBy:null,submittedAt:null},
+];
+
+const PANELS={
+  0:[
+    {role:'Referee',name:"Ben O'Keeffe",union:'NZL',rule:'neutral'},
+    {role:'AR1',name:'Mike Adamson',union:'SCO',rule:'home'},
+    {role:'AR2',name:'Alasdair Stewart',union:'SCO',rule:'home'},
+    {role:'AR4',name:'Scott Glancy',union:'SCO',rule:'home'},
+    {role:'AR5',name:'Callum Murray',union:'SCO',rule:'home'},
+    {role:'TMO',name:'Glenn Newman',union:'NZL',rule:'neutral'},
+    {role:'TMO Operator',name:'Ross McNeil',union:'SCO',rule:'home'},
+    {role:'SLM',name:'Derek Brown',union:'SCO',rule:'home'},
+    {role:'Timekeeper',name:'Robert Kelly',union:'SCO',rule:'home'},
+    {role:'Citing Comm.',name:'Euan Black',union:'SCO',rule:'home'},
+  ],
+  2:[
+    {role:'Referee',name:'Matthew Carley',union:'ENG',rule:'neutral'},
+    {role:'AR1',name:'Elan Williams',union:'WAL',rule:'home'},
+    {role:'AR2',name:'Matthew Willis',union:'WAL',rule:'home'},
+    {role:'AR4',name:'Huw Williams',union:'WAL',rule:'home'},
+    {role:'AR5',name:'Rachael Davies',union:'WAL',rule:'home'},
+    {role:'TMO',name:'Joy Neville',union:'IRL',rule:'neutral'},
+    {role:'TMO Operator',name:'Gareth Thomas',union:'WAL',rule:'home'},
+    {role:'SLM',name:'Ewan Williams',union:'WAL',rule:'home'},
+    {role:'Timekeeper',name:'Huw Williams',union:'WAL',rule:'home'},
+    {role:'Citing Comm.',name:'Rachael Davies',union:'WAL',rule:'home'},
+  ],
+  3:[
+    {role:'Referee',name:'Frank Murphy',union:'IRL',rule:'neutral'},
+    {role:'AR1',name:'Sifiso Sithole',union:'RSA',rule:'home'},
+    {role:'AR2',name:'Lourens Munro',union:'RSA',rule:'home'},
+    {role:'AR4',name:'Riaan Botha',union:'RSA',rule:'home'},
+    {role:'AR5',name:'Deon Teach',union:'RSA',rule:'home'},
+    {role:'TMO',name:'Ton Jonker',union:'RSA',rule:'neutral'},
+    {role:'TMO Operator',name:'Neil Louw',union:'RSA',rule:'home'},
+    {role:'SLM',name:'Carlo Visser',union:'RSA',rule:'home'},
+    {role:'Timekeeper',name:'Jan Pretorius',union:'RSA',rule:'home'},
+    {role:'Citing Comm.',name:'Pieter Ferreira',union:'RSA',rule:'home'},
+  ],
+  4:[
+    {role:'Referee',name:'Angus Brace',union:'IRL',rule:'neutral'},
+    {role:'AR1',name:'Peter Haycock',union:'IRL',rule:'home'},
+    {role:'AR2',name:'Eoghan Crowley',union:'IRL',rule:'home'},
+    {role:'AR4',name:'Eoghan Crowley',union:'IRL',rule:'home'},
+    {role:'AR5',name:'Patricia Lee',union:'IRL',rule:'home'},
+    {role:'TMO',name:'Brian MacNeice',union:'IRL',rule:'neutral'},
+    {role:'TMO Operator',name:'Brian Doherty',union:'IRL',rule:'home'},
+    {role:'SLM',name:'Grainne Murphy',union:'IRL',rule:'home'},
+    {role:'Timekeeper',name:"Aoife O'Brien",union:'IRL',rule:'home'},
+    {role:'Citing Comm.',name:"Ciarán O'Loughlin",union:'IRL',rule:'home'},
+  ],
+  6:[
+    {role:'Referee',name:'Romain Poite',union:'FRA',rule:'neutral'},
+    {role:'AR1',name:'Sifiso Sithole',union:'RSA',rule:'home'},
+    {role:'AR2',name:'Riaan Botha',union:'RSA',rule:'home'},
+    {role:'AR4',name:'Deon Teach',union:'RSA',rule:'home'},
+    {role:'AR5',name:'Lourens Munro',union:'RSA',rule:'home'},
+    {role:'TMO',name:'Ton Jonker',union:'RSA',rule:'neutral'},
+    {role:'TMO Operator',name:'Neil Louw',union:'RSA',rule:'home'},
+    {role:'SLM',name:'Lara Vermaak',union:'RSA',rule:'home'},
+    {role:'Timekeeper',name:'Jan Pretorius',union:'RSA',rule:'home'},
+    {role:'Citing Comm.',name:'Pieter Ferreira',union:'RSA',rule:'home'},
+  ],
+};
+
+const VIOLATIONS={
+  4:[
+    {severity:'error',msg:"Referee Angus Brace is an Ireland-registered official — not neutral for Leinster v Ulster"},
+    {severity:'error',msg:"TMO Brian MacNeice is an Ireland-registered official — not neutral for Leinster v Ulster"},
+  ]
+};
+
+const STATUSES={
+  draft:{label:'Draft',dot:'dot-draft',col:'col-draft',badge:'b-draft'},
+  review:{label:'Pending review',dot:'dot-review',col:'col-review',badge:'b-review'},
+  approved:{label:'Approved',dot:'dot-approved',col:'col-approved',badge:'b-approved'},
+  rejected:{label:'Rejected',dot:'dot-rejected',col:'col-rejected',badge:'b-rejected'},
+  sent:{label:'Sent to officials',dot:'dot-sent',col:'col-sent',badge:'b-sent'},
+};
+
+const UNION_FLAGS={SCO:'flag-sco',ITA:'flag-ita',WAL:'flag-wal',IRL:'flag-irl',RSA:'flag-rsa'};
+const UNION_NAMES={SCO:'Scotland',ITA:'Italy',WAL:'Wales',IRL:'Ireland',RSA:'South Africa',NZL:'New Zealand',ENG:'England',FRA:'France',GEO:'Georgia'};
+
+let selectedFix=0;
+
+function renderSidebar(){
+  const el=document.getElementById('sb-list');
+  el.innerHTML=FIXTURES.map(f=>{
+    const s=STATUSES[f.status];
+    return`<div class="sb-item ${f.id===selectedFix?'active':''}" onclick="selectFix(${f.id})">
+      <div class="sb-fix">${f.home} v ${f.away}</div>
+      <div class="sb-meta">${f.ko.split('·')[0].trim()}</div>
+      <div class="sb-status"><div class="dot ${s.dot}"></div><span class="sb-status-label ${s.col}">${s.label}</span></div>
+    </div>`;
+  }).join('');
+}
+
+function selectFix(id){
+  selectedFix=id;
+  renderSidebar();
+  renderMain();
+}
+
+function wfSteps(status){
+  const steps=[
+    {label:'Submitted',key:'submitted'},
+    {label:'Under review',key:'review'},
+    {label:'Approved',key:'approved'},
+    {label:'Sent to officials',key:'sent'},
+  ];
+  const order=['draft','review','approved','rejected','sent'];
+  const idx=order.indexOf(status);
+  return steps.map((s,i)=>{
+    let cls='';
+    if(status==='rejected'&&i===1)cls='rejected';
+    else if(i<(status==='sent'?4:status==='approved'?3:status==='review'?2:1))cls='done';
+    else if(i===(status==='sent'?3:status==='approved'?2:status==='review'?1:0))cls=status==='rejected'?'rejected':'active-step';
+    return{...s,cls};
+  });
+}
+
+function renderMain(){
+  const fix=FIXTURES[selectedFix];
+  const status=fix.status;
+  const s=STATUSES[status];
+  const panel=PANELS[fix.id]||null;
+  const viols=VIOLATIONS[fix.id]||[];
+
+  document.getElementById('top-title').textContent=`${fix.home} v ${fix.away}`;
+  document.getElementById('top-sub').textContent=`${fix.ko} · ${fix.venue}`;
+
+  // topbar actions
+  let actions='';
+  if(status==='review'){
+    actions=`<button class="btn btn-danger" onclick="rejectPanel(${fix.id})">Reject</button>
+             <button class="btn btn-success" onclick="approvePanel(${fix.id})">Approve panel</button>`;
+  } else if(status==='approved'){
+    actions=`<button class="btn btn-primary" onclick="sendToOfficials(${fix.id})">Send to officials</button>`;
+  } else if(status==='rejected'){
+    actions=`<button class="btn btn-warn" onclick="returnToDraft(${fix.id})">Return to booker</button>`;
+  } else if(status==='draft'){
+    actions=`<button class="btn" disabled style="opacity:0.5">Panel not yet submitted</button>`;
+  } else if(status==='sent'){
+    actions=`<span class="badge b-sent" style="font-size:11px;padding:5px 10px">✓ Officials notified</span>`;
+  }
+  document.getElementById('top-actions').innerHTML=actions;
+
+  // workflow track
+  const steps=wfSteps(status);
+  const trackHtml=`<div class="workflow-track">${steps.map(s=>`
+    <div class="wf-step ${s.cls}">
+      <div class="wf-node ${s.cls}">${s.cls==='done'||s.cls==='complete'?'<i class="ti ti-check" aria-hidden="true"></i>':s.cls==='rejected'?'<i class="ti ti-x" aria-hidden="true"></i>':'<i class="ti ti-circle" aria-hidden="true"></i>'}</div>
+      <div class="wf-label ${s.cls}">${s.label}</div>
+    </div>`).join('')}</div>`;
+
+  // violations
+  let violHtml='';
+  if(viols.length){
+    violHtml=viols.map(v=>`<div class="notif notif-${v.severity==='error'?'err':'warn'}"><i class="ti ti-alert-triangle" aria-hidden="true"></i><span>${v.msg}</span></div>`).join('');
+    violHtml=`<div class="section"><div class="section-title"><span>Rules violations <span class="badge b-rejected">${viols.length} error${viols.length>1?'s':''}</span></span></div><div class="notif-list">${violHtml}</div></div>`;
+  }
+
+  // panel display
+  let panelHtml='';
+  if(panel){
+    const rows=panel.map(p=>{
+      const flagCls=UNION_FLAGS[p.union]||'flag-neu';
+      const unionName=UNION_NAMES[p.union]||p.union;
+      return`<div class="panel-row filled">
+        <span class="pr-role">${p.role}</span>
+        <span class="pr-name">${p.name}</span>
+        <span class="union-tag ${flagCls}" style="margin-right:4px">${unionName}</span>
+        <span class="pr-rule ${p.rule==='neutral'?'rule-n':'rule-h'}">${p.rule==='neutral'?'Neutral':'Home'}</span>
+      </div>`;
+    }).join('');
+    panelHtml=`<div class="section"><div class="section-title">Full panel</div><div class="panel-grid">${rows}</div></div>`;
+  } else {
+    panelHtml=`<div class="section"><div class="section-title">Panel</div><div style="font-size:12px;color:var(--color-text-tertiary);padding:12px 0">No panel submitted yet for this fixture.</div></div>`;
+  }
+
+  // timeline
+  const timelines={
+    draft:`<div class="tl-item"><div class="tl-dot tl-dot-future"></div><div class="tl-body"><div class="tl-label">Awaiting panel submission</div><div class="tl-meta">Booker must complete and submit the panel</div></div></div>`,
+    review:`<div class="tl-item"><div class="tl-dot tl-dot-done"></div><div class="tl-body"><div class="tl-label">Submitted by ${fix.submittedBy}</div><div class="tl-meta">${fix.submittedAt}</div></div></div>
+      <div class="tl-item"><div class="tl-dot tl-dot-active"></div><div class="tl-body"><div class="tl-label">Awaiting manager review</div><div class="tl-meta">Sent to Tappe H for approval</div><div class="tl-note">Review deadline: Thu 15 May · 17:00</div></div></div>
+      <div class="tl-item"><div class="tl-dot tl-dot-future"></div><div class="tl-body"><div class="tl-label">Approval pending</div><div class="tl-meta">Once approved, notifications will be sent to all officials</div></div></div>`,
+    approved:`<div class="tl-item"><div class="tl-dot tl-dot-done"></div><div class="tl-body"><div class="tl-label">Submitted by ${fix.submittedBy}</div><div class="tl-meta">${fix.submittedAt}</div></div></div>
+      <div class="tl-item"><div class="tl-dot tl-dot-done"></div><div class="tl-body"><div class="tl-label">Approved by Tappe H</div><div class="tl-meta">Today 11:45</div></div></div>
+      <div class="tl-item"><div class="tl-dot tl-dot-active"></div><div class="tl-body"><div class="tl-label">Ready to send to officials</div><div class="tl-meta">Notifications not yet dispatched</div><div class="tl-note">Click "Send to officials" to notify all 10 panel members by email and in-app message</div></div></div>`,
+    rejected:`<div class="tl-item"><div class="tl-dot tl-dot-done"></div><div class="tl-body"><div class="tl-label">Submitted by ${fix.submittedBy}</div><div class="tl-meta">${fix.submittedAt}</div></div></div>
+      <div class="tl-item"><div class="tl-dot" style="background:#A32D2D;margin-top:4px;width:8px;height:8px;border-radius:50%;flex-shrink:0"></div><div class="tl-body"><div class="tl-label" style="color:#A32D2D">Rejected by Tappe H</div><div class="tl-meta">Today 09:52</div><div class="tl-note">⚠ Rules violations detected — Referee and TMO must be neutral for Leinster v Ulster. Please revise and resubmit.</div></div></div>
+      <div class="tl-item"><div class="tl-dot tl-dot-future"></div><div class="tl-body"><div class="tl-label">Awaiting revised submission</div><div class="tl-meta">Return to booker to amend panel</div></div></div>`,
+    sent:`<div class="tl-item"><div class="tl-dot tl-dot-done"></div><div class="tl-body"><div class="tl-label">Submitted by ${fix.submittedBy}</div><div class="tl-meta">${fix.submittedAt}</div></div></div>
+      <div class="tl-item"><div class="tl-dot tl-dot-done"></div><div class="tl-body"><div class="tl-label">Approved by Tappe H</div><div class="tl-meta">${fix.submittedAt==='2 days ago'?'Yesterday 09:15':'Yesterday 14:20'}</div></div></div>
+      <div class="tl-item"><div class="tl-dot tl-dot-done"></div><div class="tl-body"><div class="tl-label">Sent to all officials</div><div class="tl-meta">${fix.submittedAt==='2 days ago'?'Yesterday 10:00':'Yesterday 15:00'}</div><div class="tl-note">✓ All 10 officials notified by email and in-app message. Appointment confirmed.</div></div></div>`,
+  };
+
+  // reviewer comment box
+  let commentHtml='';
+  if(status==='review'){
+    commentHtml=`<div class="section"><div class="section-title">Reviewer notes</div>
+      <textarea class="comment-box" id="comment-box" placeholder="Add a note for the booker (optional)..."></textarea>
+      <div class="action-row">
+        <button class="btn btn-danger" onclick="rejectPanel(${fix.id})">Reject with note</button>
+        <button class="btn btn-success" onclick="approvePanel(${fix.id})">Approve panel</button>
+      </div>
+    </div>`;
+  }
+
+  // notifications preview
+  let notifHtml='';
+  if(status==='approved'){
+    notifHtml=`<div class="section"><div class="section-title">Notification preview — on approval</div>
+      <div class="notif-list">
+        <div class="notif notif-info"><i class="ti ti-mail" aria-hidden="true"></i><span><strong>Email</strong> to all 10 officials — appointment confirmation with fixture details, venue, KO time and MD Doc link</span></div>
+        <div class="notif notif-info"><i class="ti ti-bell" aria-hidden="true"></i><span><strong>In-app notification</strong> — appointment appears in each official's dashboard and calendar</span></div>
+        <div class="notif notif-info"><i class="ti ti-message-2" aria-hidden="true"></i><span><strong>Match day group</strong> automatically created in Messaging for this fixture's panel</span></div>
+      </div>
+    </div>`;
+  }
+  if(status==='sent'){
+    notifHtml=`<div class="section"><div class="section-title">Notification log</div>
+      <div class="notif-list">
+        <div class="notif notif-success"><i class="ti ti-mail" aria-hidden="true"></i><span>Email sent to all 10 officials ✓</span></div>
+        <div class="notif notif-success"><i class="ti ti-bell" aria-hidden="true"></i><span>In-app notifications delivered ✓</span></div>
+        <div class="notif notif-success"><i class="ti ti-message-2" aria-hidden="true"></i><span>Match day group created in Messaging ✓</span></div>
+      </div>
+    </div>`;
+  }
+
+  document.getElementById('main-content').innerHTML=`
+    ${trackHtml}
+    ${violHtml}
+    ${panelHtml}
+    <div class="section"><div class="section-title">Activity timeline</div><div class="timeline">${timelines[status]||''}</div></div>
+    ${commentHtml}
+    ${notifHtml}
+  `;
+}
+
+function approvePanel(id){
+  FIXTURES.find(f=>f.id===id).status='approved';
+  renderSidebar();renderMain();
+}
+function rejectPanel(id){
+  FIXTURES.find(f=>f.id===id).status='rejected';
+  renderSidebar();renderMain();
+}
+function sendToOfficials(id){
+  FIXTURES.find(f=>f.id===id).status='sent';
+  renderSidebar();renderMain();
+}
+function returnToDraft(id){
+  FIXTURES.find(f=>f.id===id).status='draft';
+  renderSidebar();renderMain();
+}
+
+selectFix(0);
+</script>
