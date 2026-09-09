@@ -16,6 +16,9 @@ const TABLES = {
   AVAILABILITY: 'MO Availability',
   TEAMSHEETS: 'tbl3T1GZAraVOCowH',
   PLAYERS: 'tblZCM6ORHyvfIN3H',
+  PERMITS: 'tblkoBpAwgzc8arrt',
+  LOANS: 'tblEC8b1gwnk5hCoO',
+  MATCHDAY: 'tblPziFfqLIhLdgxh',
 };
 
 module.exports = { base, TABLES };

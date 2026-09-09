@@ -14,6 +14,9 @@ const panelsRouter = require('./src/routes/panels');
 const availabilityRouter = require('./src/routes/availability');
 const teamsheetsRouter = require('./src/routes/teamsheets');
 const playersRouter = require('./src/routes/players');
+const permitsRouter = require('./src/routes/permits');
+const loansRouter = require('./src/routes/loans');
+const matchdayRouter = require('./src/routes/matchday');
 
 const app = express();
 app.use(cors());
@@ -63,6 +66,9 @@ app.use('/panels', panelsRouter);
 app.use('/availability', availabilityRouter);
 app.use('/teamsheets', teamsheetsRouter);
 app.use('/players', playersRouter);
+app.use('/permits', permitsRouter);
+app.use('/loans', loansRouter);
+app.use('/matchday', matchdayRouter);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`URC Ops backend running on port ${PORT}`));

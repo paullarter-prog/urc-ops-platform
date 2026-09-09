@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Matchday 23 — URC Ops Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --urc-dark:#0a1e2d; --urc-dark-2:#142837; --urc-turquoise:#00cde6; --available:#1e7e34; --unavailable:#b3261e; --warn:#b25e09; }
+  body { font-family:'Red Hat Display',ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,sans-serif; max-width:900px; margin:40px auto; padding:0 20px; color:var(--urc-dark); background:#f4f6f8; }
+  h1 { font-size:1.4rem; font-weight:700; margin-bottom:4px; }
+  .sub { color:#5c7280; font-size:0.9rem; margin:0 0 20px; }
+  .back-link { display:inline-block; margin-bottom:12px; color:var(--urc-dark); text-decoration:none; font-size:0.85rem; font-weight:500; }
+  .back-link:hover { color:var(--urc-turquoise); }
+  .toolbar { display:flex; align-items:center; gap:14px; margin-bottom:18px; flex-wrap:wrap; }
+  .toolbar select { padding:8px; font-size:1rem; font-family:inherit; border:1px solid #ccc; border-radius:6px; background:#fff; color:var(--urc-dark); min-width:220px; }
+  .section-heading { font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#7a8590; margin:20px 0 8px; }
+  table { width:100%; border-collapse:collapse; background:#fff; border-radius:10px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,0.08); }
+  th, td { text-align:left; padding:8px 10px; font-size:0.85rem; border-bottom:1px solid #e3e6e9; vertical-align:middle; }
+  th { background:#eef1f3; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.04em; color:#5c7280; }
+  tr:last-child td { border-bottom:none; }
+  .shirt-num { font-weight:700; width:24px; }
+  select.inline { font-family:inherit; font-size:0.85rem; padding:5px 6px; border:1px solid #ccc; border-radius:4px; background:#fff; color:var(--urc-dark); min-width:180px; }
+  .cover-cell { text-align:center; font-size:0.72rem; color:#5c7280; }
+  button.primary { padding:10px 18px; font-size:0.9rem; font-family:inherit; font-weight:500; background:var(--urc-dark); color:#fff; border:none; border-radius:6px; cursor:pointer; margin-top:20px; }
+  button.primary:hover { background:var(--urc-dark-2); }
+  button.primary:disabled { background:#aab7c0; cursor:default; }
+  .empty-state { color:#7a8590; padding:30px; text-align:center; background:#fff; border-radius:10px; }
+  #message { margin-bottom:16px; padding:10px; border-radius:6px; display:none; }
+  #message.success { display:block; background:#e6f4ea; color:#1e7e34; }
+  #message.error { display:block; background:#fdecea; color:#b3261e; }
+</style>
+</head>
+<body>
+<a href="dashboard.html" class="back-link">← Dashboard</a>
+<h1>Matchday 23 Selection</h1>
+<p class="sub">Pick your 23 from the registered squad for a fixture.</p>
+
+<div id="message"></div>
+
+<div class="toolbar">
+  <select id="fixture-select"></select>
+  <select id="team-select"></select>
+</div>
+
+<div id="squad-form"></div>
+
+<script>
+const STARTING_POSITIONS = [
+  'Loosehead Prop', 'Hooker', 'Tighthead Prop', 'Lock', 'Lock',
+  'Blindside Flanker', 'Openside Flanker', 'Number 8',
+  'Scrum-Half', 'Fly-Half', 'Wing', 'Inside Centre', 'Outside Centre', 'Wing', 'Full-Back',
+];
+
+function franchiseMatchesTeam(franchise, team) {
+  if (!franchise || !team) return false;
+  const f = franchise.trim().toLowerCase();
+  const t = team.trim().toLowerCase();
+  return f === t || f.includes(t) || t.includes(f);
+}
+
+let currentUser = null;
+let allFixtures = [];
+let squadPlayers = [];
+let existingSelection = [];
+
+const fixtureSelect = document.getElementById('fixture-select');
+const teamSelect = document.getElementById('team-select');
+const squadForm = document.getElementById('squad-form');
+const message = document.getElementById('message');
+
+function showMessage(text, kind) {
+  message.className = kind;
+  message.textContent = text;
+  if (kind === 'success') setTimeout(() => { message.className = ''; message.textContent = ''; }, 3000);
+}
+
+async function loadUser() {
+  const res = await fetch('/auth/me');
+  currentUser = await res.json();
+}
+
+async function loadFixtures() {
+  const res = await fetch('/fixtures');
+  allFixtures = await res.json();
+  allFixtures.sort((a, b) => a.Date.localeCompare(b.Date));
+
+  const myTeam = currentUser.role === 'Club Ops'
+    ? ['Benetton', 'Vodacom Bulls', 'Cardiff Rugby', 'Connacht', 'Dragons RFC', 'Edinburgh Rugby',
+       'Glasgow Warriors', 'Leinster', '10bet Lions', 'Munster', 'Ospreys', 'Scarlets',
+       'Hollywoodbets Sharks', 'DHL Stormers', 'Ulster', 'Zebre Parma'].find((t) => franchiseMatchesTeam(currentUser.franchise, t))
+    : null;
+
+  const relevant = myTeam
+    ? allFixtures.filter((f) => f['Home Team'] === myTeam || f['Away Team'] === myTeam)
+    : allFixtures;
+
+  fixtureSelect.innerHTML = '';
+  for (const f of relevant) {
+    fixtureSelect.add(new Option(`R${f.Round}: ${f['Fixture Name']} (${f.Date})`, f.id));
+  }
+  if (relevant.length) onFixtureChange();
+  else squadForm.innerHTML = '<div class="empty-state">No fixtures found.</div>';
+}
+
+function onFixtureChange() {
+  const fixture = allFixtures.find((f) => f.id === fixtureSelect.value);
+  teamSelect.innerHTML = '';
+  if (!fixture) return;
+
+  if (currentUser.role === 'Club Ops') {
+    const myTeam = [fixture['Home Team'], fixture['Away Team']].find((t) => franchiseMatchesTeam(currentUser.franchise, t));
+    teamSelect.add(new Option(myTeam, myTeam));
+    teamSelect.disabled = true;
+  } else {
+    teamSelect.add(new Option(fixture['Home Team'], fixture['Home Team']));
+    teamSelect.add(new Option(fixture['Away Team'], fixture['Away Team']));
+    teamSelect.disabled = false;
+  }
+  loadSquadAndSelection();
+}
+
+async function loadSquadAndSelection() {
+  const fixtureId = fixtureSelect.value;
+  const team = teamSelect.value;
+  if (!fixtureId || !team) return;
+
+  const [squadRes, selectionRes] = await Promise.all([
+    fetch(`/players?team=${encodeURIComponent(team)}`),
+    fetch(`/matchday?fixtureId=${fixtureId}&team=${encodeURIComponent(team)}`),
+  ]);
+  squadPlayers = await squadRes.json();
+  squadPlayers.sort((a, b) => (a['Last Name'] || '').localeCompare(b['Last Name'] || ''));
+  existingSelection = await selectionRes.json();
+
+  renderForm();
+}
+
+function playerOptions(selectedId) {
+  return squadPlayers.map((p) =>
+    `<option value="${p.id}" ${p.id === selectedId ? 'selected' : ''}>${p['Full Name']}${p.Position ? ` (${p.Position})` : ''}</option>`
+  ).join('');
+}
+
+function selectionFor(shirtNumber) {
+  return existingSelection.find((s) => s['Shirt Number'] === shirtNumber);
+}
+
+function renderRow(shirtNumber, isBench) {
+  const sel = selectionFor(shirtNumber);
+  const playerId = sel ? (sel.Player || [])[0] : '';
+  const position = isBench ? '' : STARTING_POSITIONS[shirtNumber - 1];
+  return `
+    <tr data-shirt="${shirtNumber}">
+      <td class="shirt-num">${shirtNumber}</td>
+      <td>${isBench ? 'Bench' : position}</td>
+      <td><select class="inline player-select" data-shirt="${shirtNumber}">
+        <option value="">— none —</option>${playerOptions(playerId)}
+      </select></td>
+      <td style="text-align:center"><input type="radio" name="captain" value="${shirtNumber}" ${sel && sel.Captain ? 'checked' : ''}></td>
+      <td style="text-align:center"><input type="radio" name="viceCaptain" value="${shirtNumber}" ${sel && sel['Vice Captain'] ? 'checked' : ''}></td>
+      ${isBench ? `
+        <td class="cover-cell"><input type="checkbox" class="cover-lhp" data-shirt="${shirtNumber}" ${sel && sel['Covers LHP'] ? 'checked' : ''}></td>
+        <td class="cover-cell"><input type="checkbox" class="cover-hooker" data-shirt="${shirtNumber}" ${sel && sel['Covers Hooker'] ? 'checked' : ''}></td>
+        <td class="cover-cell"><input type="checkbox" class="cover-thp" data-shirt="${shirtNumber}" ${sel && sel['Covers THP'] ? 'checked' : ''}></td>
+      ` : '<td></td><td></td><td></td>'}
+    </tr>`;
+}
+
+function renderForm() {
+  const startingRows = Array.from({ length: 15 }, (_, i) => renderRow(i + 1, false)).join('');
+  const benchRows = Array.from({ length: 8 }, (_, i) => renderRow(i + 16, true)).join('');
+
+  squadForm.innerHTML = `
+    <table>
+      <thead><tr><th>#</th><th>Position</th><th>Player</th><th>C</th><th>VC</th><th>LHP</th><th>Hooker</th><th>THP</th></tr></thead>
+      <tbody>${startingRows}</tbody>
+    </table>
+    <div class="section-heading">Bench</div>
+    <table>
+      <thead><tr><th>#</th><th>Position</th><th>Player</th><th>C</th><th>VC</th><th>LHP</th><th>Hooker</th><th>THP</th></tr></thead>
+      <tbody>${benchRows}</tbody>
+    </table>
+    <button class="primary" id="save-btn">Save Matchday 23</button>
+  `;
+
+  document.getElementById('save-btn').addEventListener('click', saveSelection);
+}
+
+async function saveSelection() {
+  const rows = squadForm.querySelectorAll('tr[data-shirt]');
+  const selections = [];
+  const seenPlayers = new Set();
+
+  for (const row of rows) {
+    const shirtNumber = Number(row.dataset.shirt);
+    const playerSelect = row.querySelector('.player-select');
+    const playerId = playerSelect.value;
+    if (!playerId) continue;
+    if (seenPlayers.has(playerId)) {
+      showMessage('The same player is selected in more than one shirt number.', 'error');
+      return;
+    }
+    seenPlayers.add(playerId);
+
+    const captainRadio = row.querySelector('input[name="captain"]');
+    const vcRadio = row.querySelector('input[name="viceCaptain"]');
+    const coverLhp = row.querySelector('.cover-lhp');
+    const coverHooker = row.querySelector('.cover-hooker');
+    const coverThp = row.querySelector('.cover-thp');
+
+    const position = shirtNumber <= 15 ? STARTING_POSITIONS[shirtNumber - 1]
+      : (squadPlayers.find((p) => p.id === playerId) || {}).Position;
+
+    selections.push({
+      shirtNumber,
+      playerId,
+      position,
+      captain: captainRadio ? captainRadio.checked : false,
+      viceCaptain: vcRadio ? vcRadio.checked : false,
+      coversLHP: coverLhp ? coverLhp.checked : false,
+      coversHooker: coverHooker ? coverHooker.checked : false,
+      coversTHP: coverThp ? coverThp.checked : false,
+    });
+  }
+
+  try {
+    const res = await fetch('/matchday', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fixtureId: fixtureSelect.value, team: teamSelect.value, selections }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to save matchday squad');
+    showMessage(`Matchday squad saved (${data.length} players).`, 'success');
+  } catch (err) {
+    showMessage(err.message, 'error');
+  }
+}
+
+fixtureSelect.addEventListener('change', onFixtureChange);
+teamSelect.addEventListener('change', loadSquadAndSelection);
+
+(async () => {
+  await loadUser();
+  await loadFixtures();
+})();
+</script>
+</body>
+</html>

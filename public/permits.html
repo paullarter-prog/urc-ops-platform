@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Permit Requests — URC Ops Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --urc-dark:#0a1e2d; --urc-dark-2:#142837; --urc-turquoise:#00cde6; --available:#1e7e34; --unavailable:#b3261e; --warn:#b25e09; }
+  body { font-family:'Red Hat Display',ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,sans-serif; max-width:1000px; margin:40px auto; padding:0 20px; color:var(--urc-dark); background:#f4f6f8; }
+  h1 { font-size:1.4rem; font-weight:700; margin-bottom:4px; }
+  .sub { color:#5c7280; font-size:0.9rem; margin:0 0 20px; }
+  .back-link { display:inline-block; margin-bottom:12px; color:var(--urc-dark); text-decoration:none; font-size:0.85rem; font-weight:500; }
+  .back-link:hover { color:var(--urc-turquoise); }
+  .toolbar { display:flex; align-items:center; gap:14px; margin-bottom:18px; flex-wrap:wrap; }
+  .toolbar select { padding:8px; font-size:1rem; font-family:inherit; border:1px solid #ccc; border-radius:6px; background:#fff; color:var(--urc-dark); }
+  button.primary { margin-left:auto; padding:8px 16px; font-size:0.9rem; font-family:inherit; font-weight:500; background:var(--urc-dark); color:#fff; border:none; border-radius:6px; cursor:pointer; }
+  button.primary:hover { background:var(--urc-dark-2); }
+  .card { background:#fff; border-radius:10px; border:1px solid #e3e6e9; padding:16px 20px; margin-bottom:10px; display:grid; grid-template-columns:1fr auto; gap:12px; align-items:start; }
+  .card h3 { margin:0 0 4px; font-size:1rem; }
+  .card .meta { font-size:0.8rem; color:#5c7280; }
+  .card .reason { font-size:0.85rem; margin-top:6px; }
+  .pill { display:inline-block; padding:4px 12px; border-radius:20px; font-size:0.78rem; font-weight:500; border:1px solid #ccc; color:#5c7280; }
+  .pill.Pending { background:#fff8e1; color:var(--warn); border-color:var(--warn); }
+  .pill.Approved { background:#e6f4ea; color:var(--available); border-color:var(--available); }
+  .pill.Declined { background:#fdecea; color:var(--unavailable); border-color:var(--unavailable); }
+  .actions { display:flex; flex-direction:column; gap:6px; align-items:flex-end; }
+  .actions button { padding:5px 12px; font-size:0.8rem; font-family:inherit; font-weight:500; border-radius:6px; cursor:pointer; border:none; }
+  .approve-btn { background:var(--available); color:#fff; }
+  .decline-btn { background:var(--unavailable); color:#fff; }
+  .empty-state { color:#7a8590; padding:30px; text-align:center; background:#fff; border-radius:10px; }
+  #message { margin-bottom:16px; padding:10px; border-radius:6px; display:none; }
+  #message.success { display:block; background:#e6f4ea; color:#1e7e34; }
+  #message.error { display:block; background:#fdecea; color:#b3261e; }
+  dialog { border:none; border-radius:10px; padding:0; max-width:440px; width:90%; }
+  dialog::backdrop { background:rgba(10,30,45,0.5); }
+  .dialog-inner { padding:24px; }
+  .dialog-inner h2 { font-size:1.1rem; margin:0 0 16px; }
+  .dialog-inner form { display:grid; gap:12px; }
+  .row2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  label { display:block; font-weight:500; font-size:0.8rem; margin-bottom:3px; }
+  input, select, textarea { width:100%; padding:8px; font-size:0.9rem; font-family:inherit; border:1px solid #ccc; border-radius:6px; box-sizing:border-box; background:#fff; color:var(--urc-dark); }
+  textarea { resize:vertical; min-height:60px; }
+  .dialog-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:6px; }
+  .dialog-actions button { padding:8px 16px; font-size:0.9rem; font-family:inherit; font-weight:500; border-radius:6px; cursor:pointer; border:none; }
+  .dialog-actions .cancel { background:#e3e6e9; color:var(--urc-dark); }
+  .dialog-actions .save { background:var(--urc-dark); color:#fff; }
+</style>
+</head>
+<body>
+<a href="dashboard.html" class="back-link">← Dashboard</a>
+<h1>Permit Requests</h1>
+<p class="sub">Request players outside your registered squad. URC reviews and approves.</p>
+
+<div id="message"></div>
+
+<div class="toolbar">
+  <select id="team-select"></select>
+  <button class="primary" id="new-btn">+ New Request</button>
+</div>
+
+<div id="list"></div>
+
+<dialog id="add-dialog">
+  <div class="dialog-inner">
+    <h2>New Permit Request</h2>
+    <form id="add-form">
+      <div class="row2">
+        <div><label for="firstName">First Name</label><input id="firstName" required></div>
+        <div><label for="lastName">Last Name</label><input id="lastName" required></div>
+      </div>
+      <div class="row2">
+        <div><label for="knownName">Known Name</label><input id="knownName"></div>
+        <div><label for="position">Position</label>
+          <select id="position">
+            <option value="">—</option>
+            <option>Loosehead Prop</option><option>Hooker</option><option>Tighthead Prop</option>
+            <option>Lock</option><option>Blindside Flanker</option><option>Openside Flanker</option>
+            <option>Number 8</option><option>Scrum-Half</option><option>Fly-Half</option>
+            <option>Wing</option><option>Inside Centre</option><option>Outside Centre</option>
+            <option>Centre</option><option>Full-Back</option><option>Utility Back</option>
+          </select>
+        </div>
+      </div>
+      <div><label for="reason">Reason</label><textarea id="reason" required></textarea></div>
+      <div class="row2">
+        <div><label for="replacingPlayer">Replacing Player</label><input id="replacingPlayer"></div>
+        <div><label for="roundFrom">Round From</label><input type="number" id="roundFrom" min="1" max="18"></div>
+      </div>
+      <div><label for="notes">Additional Notes</label><textarea id="notes"></textarea></div>
+      <div class="dialog-actions">
+        <button type="button" class="cancel" id="cancel-add">Cancel</button>
+        <button type="submit" class="save">Submit Request</button>
+      </div>
+    </form>
+  </div>
+</dialog>
+
+<script>
+const TEAM_NAMES = [
+  'Benetton', 'Vodacom Bulls', 'Cardiff Rugby', 'Connacht', 'Dragons RFC',
+  'Edinburgh Rugby', 'Glasgow Warriors', 'Leinster', '10bet Lions', 'Munster',
+  'Ospreys', 'Scarlets', 'Hollywoodbets Sharks', 'DHL Stormers', 'Ulster', 'Zebre Parma',
+];
+function franchiseMatchesTeam(franchise, team) {
+  if (!franchise || !team) return false;
+  const f = franchise.trim().toLowerCase();
+  const t = team.trim().toLowerCase();
+  return f === t || f.includes(t) || t.includes(f);
+}
+
+let currentUser = null;
+let currentTeam = null;
+
+const teamSelect = document.getElementById('team-select');
+const list = document.getElementById('list');
+const message = document.getElementById('message');
+const addDialog = document.getElementById('add-dialog');
+
+function showMessage(text, kind) {
+  message.className = kind;
+  message.textContent = text;
+  if (kind === 'success') setTimeout(() => { message.className = ''; message.textContent = ''; }, 3000);
+}
+
+async function loadUser() {
+  const res = await fetch('/auth/me');
+  currentUser = await res.json();
+}
+
+function setupTeamSelect() {
+  teamSelect.innerHTML = '';
+  if (currentUser.role === 'Club Ops') {
+    const myTeam = TEAM_NAMES.find((t) => franchiseMatchesTeam(currentUser.franchise, t));
+    if (myTeam) { teamSelect.add(new Option(myTeam, myTeam)); teamSelect.disabled = true; }
+  } else {
+    teamSelect.add(new Option('All Teams', ''));
+    for (const t of TEAM_NAMES) teamSelect.add(new Option(t, t));
+  }
+}
+
+async function loadRequests() {
+  currentTeam = teamSelect.value;
+  const url = currentTeam ? `/permits?team=${encodeURIComponent(currentTeam)}` : '/permits';
+  const res = await fetch(url);
+  const requests = await res.json();
+  requests.sort((a, b) => (b['Date Submitted'] || '').localeCompare(a['Date Submitted'] || ''));
+
+  if (requests.length === 0) {
+    list.innerHTML = '<div class="empty-state">No permit requests yet.</div>';
+    return;
+  }
+  list.innerHTML = requests.map(renderCard).join('');
+
+  list.querySelectorAll('.approve-btn').forEach((el) => el.addEventListener('click', () => review(el.dataset.id, 'Approved')));
+  list.querySelectorAll('.decline-btn').forEach((el) => el.addEventListener('click', () => review(el.dataset.id, 'Declined')));
+}
+
+function renderCard(r) {
+  const isAdmin = currentUser.role === 'Admin';
+  const showActions = isAdmin && r.Status === 'Pending';
+  return `
+    <div class="card">
+      <div>
+        <h3>${r['Full Name']}${r['Known Name'] ? ` "${r['Known Name']}"` : ''} <span class="pill ${r.Status}">${r.Status}</span></h3>
+        <div class="meta">${r.Team} · ${r.Position || 'Position TBC'}${r['Round From'] ? ` · From Round ${r['Round From']}` : ''}</div>
+        <div class="reason">${r.Reason || ''}</div>
+        ${r['Replacing Player'] ? `<div class="meta">Replacing: ${r['Replacing Player']}</div>` : ''}
+      </div>
+      <div class="actions">
+        ${showActions ? `<button class="approve-btn" data-id="${r.id}">Approve</button><button class="decline-btn" data-id="${r.id}">Decline</button>` : ''}
+      </div>
+    </div>`;
+}
+
+async function review(id, status) {
+  try {
+    const body = { status };
+    if (status === 'Approved') body.approvedFrom = new Date().toISOString().slice(0, 10);
+    const res = await fetch(`/permits/${id}`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to update request');
+    showMessage(`Request ${status.toLowerCase()}.`, 'success');
+    loadRequests();
+  } catch (err) {
+    showMessage(err.message, 'error');
+  }
+}
+
+document.getElementById('new-btn').addEventListener('click', () => {
+  if (currentUser.role === 'Admin' && !currentTeam) {
+    showMessage('Select a specific team before submitting a request.', 'error');
+    return;
+  }
+  addDialog.showModal();
+});
+document.getElementById('cancel-add').addEventListener('click', () => addDialog.close());
+
+document.getElementById('add-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const body = {
+    team: currentTeam,
+    firstName: document.getElementById('firstName').value,
+    lastName: document.getElementById('lastName').value,
+    knownName: document.getElementById('knownName').value,
+    position: document.getElementById('position').value,
+    reason: document.getElementById('reason').value,
+    replacingPlayer: document.getElementById('replacingPlayer').value,
+    roundFrom: document.getElementById('roundFrom').value,
+    notes: document.getElementById('notes').value,
+  };
+  try {
+    const res = await fetch('/permits', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to submit request');
+    addDialog.close();
+    e.target.reset();
+    showMessage('Permit request submitted.', 'success');
+    loadRequests();
+  } catch (err) {
+    showMessage(err.message, 'error');
+  }
+});
+
+teamSelect.addEventListener('change', loadRequests);
+
+(async () => {
+  await loadUser();
+  setupTeamSelect();
+  await loadRequests();
+})();
+</script>
+</body>
+</html>
